@@ -5,14 +5,17 @@ module GSL
   # TODO!
   #
   # Notes:
-  # * This class includes numerable, but certain methods are redefined (like #max and #min)
-  # for fast versions that don't use #each. Calling #each (and therefore, any other Enumerable's method) is slower.
+  #  * This class includes numerable, but certain methods are redefined (like #max and #min)
+  #  for fast versions that don't use #each. Calling #each (and therefore, any other Enumerable's method) is slower.
   #
-  # TODO: add type coercions
+  # TODO:
+	#  * add type coercions
+	#  * add equality
   class Vector
     include Enumerable
     
     attr_reader :ptr #:nodoc:
+    attr_reader :size # Vector size
     
     # Create a Vector of size n. If zero is true, the vector is initialized with zeros
     # Otherwise, the vector will contain garbage.
@@ -23,14 +26,26 @@ module GSL
       
       @size = n # TODO: extract from @ptr
     end
+
+		# Same as Vector.new(n, true)
+		def Vector.zero(n)
+			Vector.new(n, true)
+		end
     
     def initialize_copy(other)
+      ObjectSpace.undefine_finalizer(self) # TODO: ruby bug?
       @ptr = GSL::Backend::gsl_vector_alloc(other.size)
       GSL.set_finalizer(self, :gsl_vector_free, @ptr)
       
       @size = other.size
       GSL::Backend::gsl_vector_memcpy(@ptr, other.ptr)
     end
+
+    # Generates a Vector of n random numbers between 0 and 1.
+    # NOTE: This simply uses Kernel#rand
+    #def Vector.random(n)
+    #  Vector.new(n).
+    #end
     
     # copies other's values into self
     def copy(other)
@@ -64,10 +79,10 @@ module GSL
     
     # Multiply (element-by-element) other with self
     def mul(other)
-      case other.class
+      case other
       when Numeric; GSL::Backend::gsl_blas_dscal(other.to_f, @ptr)
       when Vector; GSL::Backend::gsl_vector_mul(@ptr, other.ptr)
-      else raise TypeError, 'Unsupported type' end
+      else raise TypeError, "Unsupported type: #{other.class}" end
     end
     
     # Divide (element-by-element) self by other
@@ -112,10 +127,10 @@ module GSL
     end
     
     def minmax_index
-      min = FFI::MemoryPointer.new(:uint)
-      max = FFI::MemoryPointer.new(:uint)
+      min = FFI::MemoryPointer.new(:size_t)
+      max = FFI::MemoryPointer.new(:size_t)
       GSL::Backend::gsl_vector_minmax_index(@ptr, min, max)      
-      return [min[0].get_uint(0),max[0].get_uint(0)]
+      return [min[0].get_size_t(0),max[0].get_size_t(0)]
     end
     
     # Same as #min, but returns the index to the element

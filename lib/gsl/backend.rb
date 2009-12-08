@@ -13,14 +13,14 @@ module GSL
     
     ##----- Vector ------##
     # memory handling
-    attach_function :gsl_vector_alloc, [ :int ], :pointer
-    attach_function :gsl_vector_calloc, [ :int ], :pointer
+    attach_function :gsl_vector_alloc, [ :size_t ], :pointer
+    attach_function :gsl_vector_calloc, [ :size_t ], :pointer
     attach_function :gsl_vector_free, [ :pointer ], :void
     
     # initializing
     attach_function :gsl_vector_set_all, [ :pointer, :double ], :void
     attach_function :gsl_vector_set_zero, [ :pointer ], :void
-    attach_function :gsl_vector_set_basis, [ :pointer, :uint ], :int
+    attach_function :gsl_vector_set_basis, [ :pointer, :size_t ], :int
   
     # operations
     attach_function :gsl_vector_add, [ :pointer, :pointer ], :int
@@ -31,8 +31,8 @@ module GSL
     attach_function :gsl_vector_add_constant, [ :pointer, :double ], :int
     
     # element access
-    attach_function :gsl_vector_get, [ :pointer, :int ], :double
-    attach_function :gsl_vector_set, [ :pointer, :int, :double ], :void
+    attach_function :gsl_vector_get, [ :pointer, :size_t ], :double
+    attach_function :gsl_vector_set, [ :pointer, :size_t, :double ], :void
     
     # properties
     attach_function :gsl_vector_isnull, [ :pointer ], :int
@@ -44,8 +44,8 @@ module GSL
     attach_function :gsl_vector_max, [ :pointer ], :double
     attach_function :gsl_vector_min, [ :pointer ], :double
     attach_function :gsl_vector_minmax, [ :pointer, :buffer_out, :buffer_out ], :void
-    attach_function :gsl_vector_max_index, [ :pointer ], :uint
-    attach_function :gsl_vector_min_index, [ :pointer ], :uint
+    attach_function :gsl_vector_max_index, [ :pointer ], :size_t
+    attach_function :gsl_vector_min_index, [ :pointer ], :size_t
     attach_function :gsl_vector_minmax_index, [ :pointer, :buffer_out, :buffer_out ], :void
     
     # copying
@@ -53,7 +53,7 @@ module GSL
     attach_function :gsl_vector_swap, [ :pointer, :pointer ], :int
     
     # exchanging elements
-    attach_function :gsl_vector_swap_elements, [ :pointer, :uint, :uint ], :int
+    attach_function :gsl_vector_swap_elements, [ :pointer, :size_t, :size_t ], :int
     attach_function :gsl_vector_reverse, [ :pointer ], :int
     
     # BLAS functions
