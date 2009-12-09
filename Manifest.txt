@@ -1,0 +1,14 @@
+.autotest
+History.txt
+Manifest.txt
+README.txt
+Rakefile
+lib/gsl.rb
+lib/gsl/vector.rb
+lib/gsl/backend.rb
+lib/gsl/finalizer.rb
+ext/extconf.rb
+ext/gslng_extensions.cpp
+test/test_gsl.rb
+test/vector_test.rb
+

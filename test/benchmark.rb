@@ -1,9 +1,19 @@
-#!/usr/bin/ruby -I../lib
+#!/usr/bin/ruby -I../lib -I../ext
 require 'benchmark'
 require 'gsl'
 include Benchmark
 
-N = 10000
+N = 1000
 bm do |x|
-  x.report("Ruby/GSL-ng : ") {N.times {GSL::Vector.new(100) * GSL::Vector.new(100)}}
+  x.report("Vector (internal each) : ") {N.times {GSL::Vector.zero(1000).all? {|e| e == 0}}}
+  
+  module GSL
+    class Vector
+      def each
+        @size.times do |i| yield(self[i]) end
+      end
+    end
+  end
+
+  x.report("Vector (external each) : ") {N.times {GSL::Vector.zero(1000).all? {|e| e == 0}}}
 end

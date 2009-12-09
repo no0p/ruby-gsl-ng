@@ -1,4 +1,0 @@
-#!/bin/sh
-rm -rf doc
-rdoc -U -S -w 2 -o doc gsl/*.rb
-

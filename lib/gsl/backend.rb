@@ -1,15 +1,11 @@
 require 'ffi'
 
 module GSL
-  # TODO:
-  # * get a way to properly define the type of size_t (assumed to be :uint)
+  # TODO: get a way to properly define the type of size_t (assumed to be :uint)
   # 
-  # Wrap TODO:
-  # * Vector:
-  #   - Other vector types, like uint or so
   module Backend
     extend FFI::Library
-    ffi_lib "libgsl.so"
+    #ffi_lib "libgsl.so"
     
     ##----- Vector ------##
     # memory handling
@@ -64,6 +60,16 @@ module GSL
     #attach_function :gsl_blas_dcopy, use this instead of memcpy?
     attach_function :gsl_blas_daxpy, [ :double, :pointer, :pointer ], :int
     attach_function :gsl_blas_dscal, [ :double, :pointer ], :void
+
+		# From local extension
+		callback :gsl_vector_callback, [ :double ], :double		
+		attach_function :gsl_vector_map, [ :pointer, :gsl_vector_callback ], :void
+
+		callback :gsl_vector_index_callback, [ :size_t ], :double
+		attach_function :gsl_vector_map_index, [ :pointer, :gsl_vector_index_callback ], :void
+
+		# Sorting
+		attach_function :gsl_sort_vector, [ :pointer ], :void
     
     ##----- Error handling ------##
     callback :error_handler_callback, [ :string, :string, :int, :int ], :void
