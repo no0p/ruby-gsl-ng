@@ -26,3 +26,10 @@ extern "C" void gsl_vector_map_index(gsl_vector* v, gsl_vector_index_callback_t 
 		*gsl_vector_ptr(v, i) = (*callback)(i);
 }
 
+// A fast "each" for cases where there's no expected return value from the block
+typedef void (*gsl_vector_each_callback_t)(double);
+
+extern "C" void gsl_vector_each(gsl_vector* v, gsl_vector_each_callback_t callback) {
+	for (size_t i = 0; i < v->size; i++)
+		(*callback)(*gsl_vector_const_ptr(v, i));
+}

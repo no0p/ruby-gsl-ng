@@ -67,6 +67,9 @@ module GSL
 		callback :gsl_vector_index_callback, [ :size_t ], :double
 		attach_function :gsl_vector_map_index, [ :pointer, :gsl_vector_index_callback ], :void
 
+		callback :gsl_vector_each_callback, [ :double ], :void
+		attach_function :gsl_vector_each, [ :pointer, :gsl_vector_each_callback ], :void
+
 		# Sorting
 		attach_function :gsl_sort_vector, [ :pointer ], :void
     

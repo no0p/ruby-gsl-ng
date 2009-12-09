@@ -208,10 +208,8 @@ module GSL
 		def sort; self.dup.sort! end
 
 		def join(sep = $,)
-			s = "#{self[0]}"
-			(1..(@size-1)).each do |e|
-				s += sep + self[e].to_s
-			end
+			s = ''
+			GSL::Backend::gsl_vector_each(@ptr, lambda {|e| s += (s.empty?() ? e.to_s : sep + e.to_s)})
 			return s
 		end
 
