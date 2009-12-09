@@ -1,3 +1,8 @@
 = Ruby/GSL-ng
 
-* New-generation Ruby/GSL wrapper
+* http://ruby-gsl-ng.googlecode.com
+
+= Description
+* New-generation Ruby/GSL wrapper.
+
+

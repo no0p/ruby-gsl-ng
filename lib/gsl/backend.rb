@@ -5,7 +5,6 @@ module GSL
   # 
   module Backend
     extend FFI::Library
-    #ffi_lib "libgsl.so"
     
     ##----- Vector ------##
     # memory handling

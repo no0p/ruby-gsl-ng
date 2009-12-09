@@ -48,6 +48,11 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal(GSL::Vector[1,0,3],GSL::Vector[1,2,3] * GSL::Vector[1,0,1])
 		assert_equal(GSL::Vector[0,1,2],GSL::Vector[1,2,3] - GSL::Vector[1,1,1])
 		assert_equal(GSL::Vector[0.5,1,1.5],GSL::Vector[1,2,3] / GSL::Vector[2,2,2])
+
+		assert_equal(GSL::Vector[3,6,9],GSL::Vector[1,2,3] * 3)
+		assert_equal(GSL::Vector[4,5,6],GSL::Vector[1,2,3] + 3)
+		assert_equal(GSL::Vector[-2,-1,0],GSL::Vector[1,2,3] - 3)
+		assert_equal(GSL::Vector[0.5,1,1.5],GSL::Vector[1,2,3] / 2)
 	end
 
 	def test_other
@@ -57,5 +62,14 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal(GSL::Vector[3,1,2].mul_add(GSL::Vector[1,0,1],0.5), GSL::Vector[3.5,1,2.5])
 		assert_equal(3, GSL::Vector[2,1,2].norm)
 		assert_equal(5, GSL::Vector[3,1,2] ^ GSL::Vector[1,0,1])
+	end
+
+	def test_minmax
+		assert_equal(1, GSL::Vector[1,2,3].min)
+		assert_equal(3, GSL::Vector[1,2,3].max)
+		assert_equal([1,3], GSL::Vector[1,2,3].minmax)
+		assert_equal(0, (GSL::Vector[1,2,3]).min_index)
+		assert_equal(2, (GSL::Vector[1,2,3]).max_index)
+		assert_equal([0,2], GSL::Vector[1,2,3].minmax_index)
 	end
 end

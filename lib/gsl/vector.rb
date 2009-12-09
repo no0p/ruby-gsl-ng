@@ -6,6 +6,9 @@ module GSL
 	#  Vector[1,2,3] + 0.5 => Vector[1.5,2.5,3.5]
 	# Same goes for *, /, and - operators. The are also self-modifying versions (#add, #mul, #div, #sub).
 	#
+  # Note also that operator ^ produces the #dot product:
+	#  Vector[1,2,3] ^ Vector[2,3,4] => 20
+	#
   # =Notes
   # * This class includes Enumerable, but certain methods are redefined (like #max and #min)
   #   for fast versions that don't use #each. Calling #each (and therefore, any other Enumerable's method) is slower.
@@ -13,6 +16,7 @@ module GSL
 	#   for big Vectors. It would be possible to have a faster version that iterates on the C-side and calls a block for each
 	#   element, but in that case it wouldn't be possible to expect a return value of any type. This complicates things for methods like
 	#   #any? which expect a boolean value.
+	# * Some functions (like #sum, #dot, and others) use BLAS functions (through GSL's CBLAS interface).
 	#--
   # TODO: add type coercions
 	#
@@ -106,7 +110,7 @@ module GSL
     # Divide (element-by-element) self by other
     def div(other)
       case other
-      when Numeric; GSL::Backend::gsl_vector_scale(1.0 / other, @ptr)
+      when Numeric; GSL::Backend::gsl_blas_dscal(1.0 / other, @ptr)
       when Vector;  GSL::Backend::gsl_vector_div(@ptr, other.ptr)
       else raise TypeError, "Unsupported type: #{other.class}" end
 			return self
@@ -147,28 +151,28 @@ module GSL
 
 		# Same as Array#minmax
     def minmax
-      min = FFI::MemoryPointer.new(:double)
-      max = FFI::MemoryPointer.new(:double)
+      min = FFI::Buffer.new(:double)
+      max = FFI::Buffer.new(:double)
       GSL::Backend::gsl_vector_minmax(@ptr, min, max)      
       return [min[0].get_float64(0),max[0].get_float64(0)]
     end
 
 		# Same as #minmax, but returns the indices to the elements
     def minmax_index
-      min = FFI::MemoryPointer.new(:size_t)
-      max = FFI::MemoryPointer.new(:size_t)
+      min = FFI::Buffer.new(:size_t)
+      max = FFI::Buffer.new(:size_t)
       GSL::Backend::gsl_vector_minmax_index(@ptr, min, max)      
       #return [min[0].get_size_t(0),max[0].get_size_t(0)]
 			return [min[0].get_ulong(0),max[0].get_ulong(0)]
     end
     
     # Same as #min, but returns the index to the element
-    def min_index; GSL::Backend::gsl_vector_min(@ptr) end
+    def min_index; GSL::Backend::gsl_vector_min_index(@ptr) end
 
     # Same as #max, but returns the index to the element    
-    def max_index; GSL::Backend::gsl_vector_min(@ptr) end
+    def max_index; GSL::Backend::gsl_vector_max_index(@ptr) end
     
-    # Dot product between self and other
+    # Dot product between self and other (uses BLAS's ddot)
     def dot(other)
       out = FFI::MemoryPointer.new(:double)
       GSL::Backend::gsl_blas_ddot(@ptr, other.ptr, out)
@@ -176,14 +180,14 @@ module GSL
     end
     alias_method :^, :dot
     
-    # Norm 2 of the vector
+    # Norm 2 of the vector (uses BLAS's dnrm2)
     def norm; GSL::Backend::gsl_blas_dnrm2(@ptr) end
     alias_method :length, :norm
 
-    # Returns the sum of all elements
+    # Returns the sum of all elements (uses BLAS's dasum)
     def sum; GSL::Backend::gsl_blas_dasum(@ptr) end
 
-    # Optimized version of: self += other * alpha (where alpha is a Numeric)
+    # Optimized version of: self += other * alpha (where alpha is a Numeric). Uses BLAS's daxpy.
     def mul_add(other, alpha); GSL::Backend::gsl_blas_daxpy(alpha, other.ptr, @ptr); return self end
     
     # Yields the block for each element in the Vector
