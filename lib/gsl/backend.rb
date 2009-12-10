@@ -77,9 +77,8 @@ module GSL
     callback :error_handler_callback, [ :string, :string, :int, :int ], :void
     attach_function :gsl_set_error_handler, [ :error_handler_callback ], :error_handler_callback
     
-    # TODO: pop this block from the exception stack so that it seems to be coming from the original gsl function
     ErrorHandlerCallback = Proc.new {|reason, file, line, errno|
-      raise RuntimeError, "#{reason} at #{file}:#{line} (errno: #{errno})"      
+      raise RuntimeError, "#{reason} (errno: #{errno})", caller[2..-1]
     }
     gsl_set_error_handler(ErrorHandlerCallback)
   end

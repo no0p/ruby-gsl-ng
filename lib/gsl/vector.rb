@@ -135,7 +135,7 @@ module GSL
 		end
 		alias_method :slice, :[]
 
-		# set the i-th element (*NOTE*: throws exception if out-of-bounds)
+		# Set the i-th element (*NOTE*: throws exception if out-of-bounds)
 		# If /index/ is negative, it counts from the end (-1 is the last element)
     def []=(index, value)
 			GSL::Backend::gsl_vector_set(@ptr, (index < 0 ? @size + index : index), value.to_f)
