@@ -17,6 +17,7 @@ module GSL
 	#   element, but in that case it wouldn't be possible to expect a return value of any type. This complicates things for methods like
 	#   #any? which expect a boolean value.
 	# * Some functions (like #sum, #dot, and others) use BLAS functions (through GSL's CBLAS interface).
+	# * In contrary to Array, operators [] and []= will raise an exception when accessing out-of-bounds elements.
 	#--
   # TODO: add type coercions
 	#
@@ -127,11 +128,18 @@ module GSL
     # Swap the i-th element with the j-th element
     def swap(i,j); GSL::Backend::gsl_vector_swap_elements(@ptr, i, j); return self end
 
-		# Access the i-th element (throws exception if out-of-bounds)
-    def [](i); GSL::Backend::gsl_vector_get(@ptr, i) end
+		# Access the i-th element (*NOTE*: throws exception if out-of-bounds).
+		# If /index/ is negative, it counts from the end (-1 is the last element)
+    def [](index)
+			GSL::Backend::gsl_vector_get(@ptr, (index < 0 ? @size + index : index))
+		end
+		alias_method :slice, :[]
 
-		# set the i-th element (throws exception if out-of-bounds)
-    def []=(i, v); GSL::Backend::gsl_vector_set(@ptr, i, v.to_f) end
+		# set the i-th element (*NOTE*: throws exception if out-of-bounds)
+		# If /index/ is negative, it counts from the end (-1 is the last element)
+    def []=(index, value)
+			GSL::Backend::gsl_vector_set(@ptr, (index < 0 ? @size + index : index), value.to_f)
+		end
     
     # if all elements are zero
     def zero?; GSL::Backend::gsl_vector_isnull(@ptr) == 1 ? true : false end

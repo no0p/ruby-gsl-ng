@@ -72,4 +72,17 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal(2, (GSL::Vector[1,2,3]).max_index)
 		assert_equal([0,2], GSL::Vector[1,2,3].minmax_index)
 	end
+
+	def test_set_get
+		assert_equal(2, GSL::Vector[1,2,3][1])
+		assert_raise { GSL::Vector[1,2,3][3] }
+		assert_equal(3, GSL::Vector[1,2,3][-1])
+		assert_raise { GSL::Vector[1,2,3][-5] }
+
+		v = GSL::Vector[1,2,3]
+		v[1] = 3
+		assert_equal(GSL::Vector[1,3,3], v)
+		v[-1] = 0
+		assert_equal(GSL::Vector[1,3,0], v)
+	end
 end
