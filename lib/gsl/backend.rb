@@ -1,9 +1,8 @@
 require 'ffi'
 
 module GSL
-  # TODO: get a way to properly define the type of size_t (assumed to be :uint)
-  # 
-  module Backend
+	# Anonymous module: avoids exposing this internal module when doing "include GSL" at the top-level
+  @backend = Module.new do
     extend FFI::Library
     
     ##----- Vector ------##
@@ -82,4 +81,7 @@ module GSL
     }
     gsl_set_error_handler(ErrorHandlerCallback)
   end
+
+	# Returns the internal backend module, containing all wrapped C GSL calls
+	def GSL.backend; @backend end
 end
