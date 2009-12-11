@@ -50,10 +50,12 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal(Vector[1,0,3],Vector[1,2,3] * Vector[1,0,1])
 		assert_equal(Vector[0,1,2],Vector[1,2,3] - Vector[1,1,1])
 		assert_equal(Vector[0.5,1,1.5],Vector[1,2,3] / Vector[2,2,2])
-
 		assert_equal(Vector[3,6,9],Vector[1,2,3] * 3)
+		assert_equal(Vector[4,5,6],3 + Vector[1,2,3])
 		assert_equal(Vector[4,5,6],Vector[1,2,3] + 3)
+    assert_equal(Vector[2,1,0],3 - Vector[1,2,3])
 		assert_equal(Vector[-2,-1,0],Vector[1,2,3] - 3)
+		assert_equal(Vector[3,6,9],3 * Vector[1,2,3])
 		assert_equal(Vector[0.5,1,1.5],Vector[1,2,3] / 2)
 	end
 

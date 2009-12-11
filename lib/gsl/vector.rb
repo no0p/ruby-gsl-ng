@@ -31,8 +31,7 @@ module GSL
     # Otherwise, the vector will contain garbage.
 		# You can optionally pass a block, in which case #map_index! will be called with it (i.e.: it works like Array.new).
     def initialize(n, zero = false)
-      if (zero) then @ptr = GSL.backend::gsl_vector_calloc(n)
-      else @ptr = GSL.backend::gsl_vector_alloc(n) end
+      @ptr = (zero ? GSL.backend::gsl_vector_calloc(n) : GSL.backend::gsl_vector_alloc(n))
       GSL.set_finalizer(self, :gsl_vector_free, @ptr)
       
       @size = n # TODO: extract from @ptr
@@ -86,7 +85,11 @@ module GSL
       case other
       when Numeric; GSL.backend::gsl_vector_add_constant(@ptr, other.to_f)
       when Vector; GSL.backend::gsl_vector_add(@ptr, other.ptr)
-      else raise TypeError, "Unsupported type: #{other.class}" end
+      else
+				puts "aca"
+				x,y = other.coerce(self)
+				x.add(y)
+			end
 			return self
     end
     
@@ -95,7 +98,10 @@ module GSL
       case other
       when Numeric; GSL.backend::gsl_vector_add_constant(@ptr, -other.to_f)
       when Vector; GSL.backend::gsl_vector_sub(@ptr, other.ptr)
-      else raise TypeError, "Unsupported type: #{other.class}" end
+      else
+				x,y = other.coerce(self)
+				x.sub(y)
+			end
 			return self
     end
     
@@ -104,7 +110,10 @@ module GSL
       case other
       when Numeric; GSL.backend::gsl_blas_dscal(other.to_f, @ptr)
       when Vector; GSL.backend::gsl_vector_mul(@ptr, other.ptr)
-      else raise TypeError, "Unsupported type: #{other.class}" end
+      else
+				x,y = other.coerce(self)
+				x.mul(y)
+			end
 			return self
     end
     
@@ -113,7 +122,10 @@ module GSL
       case other
       when Numeric; GSL.backend::gsl_blas_dscal(1.0 / other, @ptr)
       when Vector;  GSL.backend::gsl_vector_div(@ptr, other.ptr)
-      else raise TypeError, "Unsupported type: #{other.class}" end
+      else
+				x,y = other.coerce(self)
+				x.div(y)
+			end
 			return self
     end
 
@@ -130,16 +142,17 @@ module GSL
 
 		# Access the i-th element (*NOTE*: throws exception if out-of-bounds).
 		# If /index/ is negative, it counts from the end (-1 is the last element)
+		# TODO: support ranges
     def [](index)
 			GSL.backend::gsl_vector_get(@ptr, (index < 0 ? @size + index : index))
-		end
-		alias_method :slice, :[]
+    end
 
 		# Set the i-th element (*NOTE*: throws exception if out-of-bounds)
 		# If /index/ is negative, it counts from the end (-1 is the last element)
+		# TODO: support ranges
     def []=(index, value)
 			GSL.backend::gsl_vector_set(@ptr, (index < 0 ? @size + index : index), value.to_f)
-		end
+    end
     
     # if all elements are zero
     def zero?; GSL.backend::gsl_vector_isnull(@ptr) == 1 ? true : false end
@@ -221,9 +234,20 @@ module GSL
 			return s
 		end
 
+		def coerce(other)
+			if (Vector === other)
+				[ other, self ]
+			elsif (Numeric === other)
+				[ Vector.new(@size).set!(other), self ]
+			else
+				raise TypeError, "Can't coerce #{other.class} into #{self.class}"
+			end
+		end
+		
 		def to_s
 			"[" + self.join(', ') + "]"
 		end
+		alias_method :inspect, :to_s
 
 		def to_a
 			Array.new(@size) {|i| self[i]}
