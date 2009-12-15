@@ -5,12 +5,12 @@ README.txt
 Rakefile
 ext/extconf.rb
 ext/gslng_extensions.cpp
-lib/gsl.rb
-lib/gsl/backend.rb
-lib/gsl/backend_components/error_handling.rb
-lib/gsl/backend_components/vector.rb
-lib/gsl/finalizer.rb
-lib/gsl/vector.rb
+lib/gslng.rb
+lib/gslng/backend.rb
+lib/gslng/backend_components/error_handling.rb
+lib/gslng/backend_components/vector.rb
+lib/gslng/finalizer.rb
+lib/gslng/vector.rb
 test/test_gsl.rb
 test/vector_test.rb
 

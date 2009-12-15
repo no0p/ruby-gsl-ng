@@ -1,4 +1,4 @@
-module GSL
+module GSLng
 	backend.instance_eval do
 		# memory handling
     attach_function :gsl_vector_alloc, [ :size_t ], :pointer
@@ -52,6 +52,10 @@ module GSL
     #attach_function :gsl_blas_dcopy, use this instead of memcpy?
     attach_function :gsl_blas_daxpy, [ :double, :pointer, :pointer ], :int
     attach_function :gsl_blas_dscal, [ :double, :pointer ], :void
+
+    # views
+    attach_function :gsl_vector_subvector2, [ :pointer, :size_t, :size_t ], :pointer
+    attach_function :gsl_vector_subvector_with_stride2, [ :pointer, :size_t, :size_t, :size_t ], :pointer
 
 		# From local extension
 		callback :gsl_vector_callback, [ :double ], :double

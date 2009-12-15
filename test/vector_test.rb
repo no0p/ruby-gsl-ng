@@ -5,9 +5,9 @@ $:.unshift File.join(File.dirname(__FILE__),'..','lib')
 $:.unshift File.join(File.dirname(__FILE__),'..','ext')
 
 require 'test/unit'
-require 'gsl'
+require 'gslng'
 
-include GSL
+include GSLng
 
 class VectorTest < Test::Unit::TestCase
   def test_initialize
@@ -27,6 +27,7 @@ class VectorTest < Test::Unit::TestCase
 	def test_equal
 		assert_equal(Vector[1,2,3], [1,2,3])
 		assert_equal(Vector[1,2,3], Vector[1,2,3])
+    assert_equal(Vector[0...3], [0,1,2])
 		assert_equal(Vector.zero(3), Vector.zero(3))
 		assert_not_equal(Vector.zero(4), Vector.zero(3))		
 	end
@@ -89,4 +90,17 @@ class VectorTest < Test::Unit::TestCase
 		v[-1] = 0
 		assert_equal(Vector[1,3,0], v)
 	end
+
+  def test_view
+    v,view = nil,nil
+    assert_nothing_raised {
+      v = Vector[1,2,3]
+      view = v.view
+      view[1] = 3
+    }
+    assert_equal(Vector[1,3,3], v)
+    assert_equal(Vector[1,3,3], view)
+    assert_equal(Vector[1,3], Vector[0,1,2,3].view(1,nil,2))
+    assert_equal(Vector[0,2], Vector[0,1,2,3].view(0,nil,2))
+  end
 end

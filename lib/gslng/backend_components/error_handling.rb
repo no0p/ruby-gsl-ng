@@ -1,4 +1,4 @@
-module GSL
+module GSLng
 	backend.instance_eval do
 		callback :error_handler_callback, [ :string, :string, :int, :int ], :void
     attach_function :gsl_set_error_handler, [ :error_handler_callback ], :error_handler_callback
