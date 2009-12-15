@@ -6,5 +6,5 @@ require 'test/unit'
 # Add your testcases here
 
 require 'vector_test'
-#require 'matrix_test'
+require 'matrix_test'
 

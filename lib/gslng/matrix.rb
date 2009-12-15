@@ -7,6 +7,11 @@ module GSLng
 		alias_method :rows, :n
 		alias_method :columns, :m
 
+		# Returns [ #rows, #columns ]
+		def size; [ @n, @m ] end
+
+    #--------------------- constructors -------------------------#
+
 		# Create a Matrix of n-by-m (rows and columns). If zero is true, the Matrix is initialized with zeros.
     # Otherwise, the Matrix will contain garbage.
 		# You can optionally pass a block, in which case #map_index! will be called with it (i.e.: it works like Array.new).
@@ -38,16 +43,15 @@ module GSLng
 			if (array.empty?) then raise "Can't create empty matrix" end
 
       if (Numeric === array[0]) then
-        Matrix.new(1, array.size) {|i,j| array[0][j]}
+        Matrix.new(1, array.size) {|i,j| array[j]}
       else
-        Matrix.new(array.size, array[0].size) {|i,j| array[i].to_a[j]}
+        Matrix.new(array.size, array[0].to_a.size) {|i,j| array[i].to_a[j]}
       end
 		end
 
 		# Create a Matrix from an Array of Arrays/Ranges (see #from_array)
 		def Matrix.[](*args)
-      array = (!args.empty? && Range === args[0] ? args[0].to_a : args)
-      Matrix.from_array(array)
+      Matrix.from_array(args)
 		end
     
     # Generates a Matrix of n by m, of random numbers between 0 and 1.
@@ -55,12 +59,19 @@ module GSLng
     def Matrix.random(n, m)
 			Matrix.new(n, m).map!{|x| Kernel::rand}
     end
-		class << self; alias_method :rand, :random end    
+		class << self; alias_method :rand, :random end
 
-		# Returns [ #rows, #columns ]
-		def size
-			[ @n, @m ]
-		end
+    #--------------------- setting values -------------------------#
+
+    def all!(v); GSLng.backend::gsl_matrix_set_all(@ptr, v); return self end
+    alias_method :set!, :all!
+    alias_method :fill!, :all!
+
+    def zero!; GSLng.backend::gsl_matrix_set_zero(@ptr); return self end
+
+    def identity; GSLng.backend::gsl_matrix_set_identity(@ptr); return self end
+
+    #--------------------- set/get -------------------------#
 
 		# Access the element (i,j), which means (row,column) (*NOTE*: throws exception if out-of-bounds).
 		# If either i or j are :* or :all, it serves as a wildcard for that dimension, returning all rows or columns,
@@ -76,38 +87,100 @@ module GSLng
 				GSLng.backend::gsl_matrix_get_row(row.ptr, @ptr, i)
 				return row
 			else
-				GSLng.backend::gsl_matrix_get(@ptr, i,j)
+				GSLng.backend::gsl_matrix_get(@ptr, i, j)
 			end
 		end
 
 		# Set the element (i,j), which means (row,column) (*NOTE*: throws exception if out-of-bounds).
 		# Same indexing options as #[].
+    # _value_ can be a single Numeric, a Vector or a Matrix, depending on the indexing.
     def []=(i, j, value)
-#			if (Symbol === i && Symbol === j) then
-#				# TODO: coerce?
-#				GSLng.backend::gsl_matrix_memcpy(@ptr, value.ptr)
-#			elsif (Symbol === i)
-#				col = Vector.new(@n)
-#				GSLng.backend::gsl_matrix_set_col(@ptr, j, col.ptr, @ptr)
-#				return col
-#			elsif (Symbol === j)
-#				row = Vector.new(@m)
-#				GSLng.backend::gsl_matrix_set_row(@ptr, i, row.ptr)
-#				return row
-#			else
+			if (Symbol === i && Symbol === j) then
+				if (Numeric === value) then self.fill!(value)
+        else
+          x,y = self.coerce(value)
+          GSLng.backend::gsl_matrix_memcpy(@ptr, x.ptr)
+        end
+			elsif (Symbol === i)
+				col = Vector.new(@n)
+        x,y = col.coerce(value)
+				GSLng.backend::gsl_matrix_set_col(@ptr, j, x.ptr)
+				return col
+			elsif (Symbol === j)
+  			row = Vector.new(@m)
+        x,y = row.coerce(value)
+				GSLng.backend::gsl_matrix_set_row(@ptr, i, x.ptr)
+				return row
+			else
 				GSLng.backend::gsl_matrix_set(@ptr, i, j, value)
-#			end
+			end
 
 			return self
 		end
 
-    def all!(v); GSLng.backend::gsl_matrix_set_all(@ptr, v); return self end
-    alias_method :set!, :all!
-    alias_method :fill!, :all!
+    #--------------------- operators -------------------------#
+    # Add other to self
+    def add(other)
+      case other
+      when Numeric; GSLng.backend::gsl_matrix_add_constant(self.ptr, other.to_f)
+      when Matrix; GSLng.backend::gsl_matrix_add(self.ptr, other.ptr)
+      else
+				x,y = other.coerce(self)
+				x.add(y)
+			end
+			return self
+    end
 
-    def zero!; GSLng.backend::gsl_matrix_set_zero(@ptr); return self end
+    # Substract other from self
+    def sub(other)
+      case other
+      when Numeric; GSLng.backend::gsl_matrix_add_constant(self.ptr, -other.to_f)
+      when Matrix; GSLng.backend::gsl_matrix_sub(self.ptr, other.ptr)
+      else
+				x,y = other.coerce(self)
+				x.sub(y)
+			end
+			return self
+    end
 
-    def identity; GSLng.backend::gsl_matrix_set_identity(@ptr); return self end
+    # Multiply (element-by-element) other with self
+    def mul(other)
+      case other
+      when Numeric; GSLng.backend::gsl_matrix_scale(other.to_f, self.ptr)
+      when Matrix; GSLng.backend::gsl_matrix_mul_elements(self.ptr, other.ptr)
+      else
+				x,y = other.coerce(self)
+				x.mul(y)
+			end
+			return self
+    end
+
+    # Divide (element-by-element) self by other
+    def div(other)
+      case other
+      when Numeric; GSLng.backend::gsl_matrix_scale(1.0 / other, self.ptr)
+      when Matrix;  GSLng.backend::gsl_matrix_div_elements(self.ptr, other.ptr)
+      else
+				x,y = other.coerce(self)
+				x.div(y)
+			end
+			return self
+    end
+
+    def +(other); self.dup.add(other) end
+    def -(other); self.dup.sub(other) end
+    def *(other); self.dup.mul(other) end
+    def /(other); self.dup.div(other) end
+
+    #--------------------- misc -------------------------#
+
+    # Transposes in-place. Only for square matrices
+    def transpose!; GSLng.backend::gsl_matrix_transpose(self.ptr); return self end
+
+    # Returns the transpose of self, in a new matrix
+    def transpose; m = Matrix.new(@m, @n); GSLng.backend::gsl_matrix_transpose_memcpy(m.ptr, self.ptr); return m end
+
+    #--------------------- predicate methods -------------------------#
     
     # if all elements are zero
     def zero?; GSLng.backend::gsl_matrix_isnull(@ptr) == 1 ? true : false end
@@ -121,6 +194,49 @@ module GSLng
     # if all elements are non-negative (>=0)
     def nonnegative?; GSLng.backend::gsl_matrix_isnonneg(@ptr) == 1 ? true : false end
 
+    #--------------------- min/max -------------------------#
+
+    def max; GSLng.backend::gsl_matrix_max(self.ptr) end
+
+    def min; GSLng.backend::gsl_matrix_min(self.ptr) end
+
+    # Same as Array#minmax
+    def minmax
+      min = FFI::Buffer.new(:double)
+      max = FFI::Buffer.new(:double)
+      GSLng.backend::gsl_matrix_minmax(self.ptr, min, max)
+      return [min[0].get_float64(0),max[0].get_float64(0)]
+    end
+
+		# Same as #minmax, but returns the indices to the i-th and j-th min, and i-th and j-th max.
+    def minmax_index
+      i_min = FFI::Buffer.new(:size_t)
+      j_min = FFI::Buffer.new(:size_t)
+      i_max = FFI::Buffer.new(:size_t)
+      j_max = FFI::Buffer.new(:size_t)
+      GSLng.backend::gsl_matrix_minmax_index(self.ptr, i_min, j_min, i_max, j_max)
+      #return [min[0].get_size_t(0),max[0].get_size_t(0)]
+			return [i_min[0].get_ulong(0),j_min[0].get_ulong(0),i_max[0].get_ulong(0),j_max[0].get_ulong(0)]
+    end
+
+    # Same as #min, but returns the indices to the i-th and j-th minimum elements
+    def min_index
+      i_min = FFI::Buffer.new(:size_t)
+      j_min = FFI::Buffer.new(:size_t)
+      GSLng.backend::gsl_matrix_min_index(self.ptr, i_min, j_min)
+      return [i_min[0].get_ulong(0), j_min[0].get_ulong(0)]
+    end
+
+    # Same as #max, but returns the indices to the i-th and j-th maximum elements
+    def max_index
+      i_max = FFI::Buffer.new(:size_t)
+      j_max = FFI::Buffer.new(:size_t)
+      GSLng.backend::gsl_matrix_max_index(self.ptr, i_max, j_max)
+      return [i_max[0].get_ulong(0), j_max[0].get_ulong(0)]
+    end
+
+    #--------------------- block handling -------------------------#
+
 		# Efficient map! implementation
 		def map!(&block); GSLng.backend::gsl_matrix_map(@ptr, block); return self end
 
@@ -129,6 +245,8 @@ module GSLng
 
 		# See #map!. Returns a Matrix.
 		def map(&block); self.dup.map!(block) end
+
+    #--------------------- conversions -------------------------#
     
     def join(sep = $,)
 			s = ''
@@ -150,6 +268,19 @@ module GSLng
       return s
 		end
     alias_method :inspect, :to_s
+
+    def coerce(other)
+      case other
+      when Matrix
+        [ other, self ]
+      when Numeric
+        [ Matrix.new(@n, @m).fill!(other), self ]
+      else
+        raise TypeError, "Can't coerce #{other.class} into #{self.class}"
+      end
+    end
+
+    #--------------------- equality -------------------------#
 
     # TODO: make it faster
     def ==(other)

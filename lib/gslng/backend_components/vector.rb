@@ -38,7 +38,6 @@ module GSLng
 
     # copying
     attach_function :gsl_vector_memcpy, [ :pointer, :pointer ], :int
-    attach_function :gsl_vector_swap, [ :pointer, :pointer ], :int
 
     # exchanging elements
     attach_function :gsl_vector_swap_elements, [ :pointer, :size_t, :size_t ], :int

@@ -12,7 +12,14 @@ module GSLng
 
     # copying
     attach_function :gsl_matrix_memcpy, [ :pointer, :pointer ], :int
-    attach_function :gsl_matrix_swap, [ :pointer, :pointer ], :int
+
+    # operations
+    attach_function :gsl_matrix_add, [ :pointer, :pointer ], :int
+    attach_function :gsl_matrix_sub, [ :pointer, :pointer ], :int
+    attach_function :gsl_matrix_mul_elements, [ :pointer, :pointer ], :int
+    attach_function :gsl_matrix_div_elements, [ :pointer, :pointer ], :int
+    attach_function :gsl_matrix_scale, [ :pointer, :double ], :int
+    attach_function :gsl_matrix_add_constant, [ :pointer, :double ], :int
 
 		# copy rows/columns into
 		attach_function :gsl_matrix_get_row, [ :pointer, :pointer, :size_t ], :int
@@ -29,6 +36,14 @@ module GSLng
     attach_function :gsl_matrix_ispos, [ :pointer ], :int
     attach_function :gsl_matrix_isneg, [ :pointer ], :int
     attach_function :gsl_matrix_isnonneg, [ :pointer ], :int
+
+    # max and min
+    attach_function :gsl_matrix_max, [ :pointer ], :double
+    attach_function :gsl_matrix_min, [ :pointer ], :double
+    attach_function :gsl_matrix_minmax, [ :pointer, :buffer_out, :buffer_out ], :void
+    attach_function :gsl_matrix_max_index, [ :pointer, :buffer_out, :buffer_out ], :void
+    attach_function :gsl_matrix_min_index, [ :pointer, :buffer_out, :buffer_out ], :void
+    attach_function :gsl_matrix_minmax_index, [ :pointer, :buffer_out, :buffer_out, :buffer_out, :buffer_out ], :void
 		
     # From local extension
 		callback :gsl_matrix_callback, [ :double ], :double

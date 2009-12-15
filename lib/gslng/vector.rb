@@ -24,6 +24,8 @@ module GSLng
     
     attr_reader :ptr	# :nodoc:
     attr_reader :size # Vector size
+
+    #--------------------- constructors -------------------------#
     
     # Create a Vector of size n. If zero is true, the vector is initialized with zeros.
     # Otherwise, the vector will contain garbage.
@@ -67,9 +69,8 @@ module GSLng
 			Vector.new(n).map!{|x| Kernel::rand}
     end
 		class << self; alias_method :rand, :random end
-    
-    # Copy other's values into self
-    def copy(other); GSLng.backend::gsl_vector_memcpy(self.ptr, other.ptr); return self end
+
+    #--------------------- setting values -------------------------#
     
     # Set all values to v
     def all!(v); GSLng.backend::gsl_vector_set_all(self.ptr, v); return self end
@@ -81,6 +82,8 @@ module GSLng
     
     # Set all values to zero, except the i-th element, which is set to 1
     def basis!(i); GSLng.backend::gsl_vector_set_basis(self.ptr, i); return self end
+
+    #--------------------- operators -------------------------#
     
     # Add other to self
     def add(other)
@@ -88,7 +91,6 @@ module GSLng
       when Numeric; GSLng.backend::gsl_vector_add_constant(self.ptr, other.to_f)
       when Vector; GSLng.backend::gsl_vector_add(self.ptr, other.ptr)
       else
-				puts "aca"
 				x,y = other.coerce(self)
 				x.add(y)
 			end
@@ -136,11 +138,41 @@ module GSLng
     def *(other); self.dup.mul(other) end
     def /(other); self.dup.div(other) end
     
+    #--------------------- other math -------------------------#
+
+    # Dot product between self and other (uses BLAS's ddot)
+    def dot(other)
+      out = FFI::Buffer.new(:double)
+      GSLng.backend::gsl_blas_ddot(self.ptr, other.ptr, out)
+      return out[0].get_double(0)
+    end
+    alias_method :^, :dot
+
+    # Norm 2 of the vector (uses BLAS's dnrm2)
+    def norm; GSLng.backend::gsl_blas_dnrm2(self.ptr) end
+    alias_method :length, :norm
+
+    # Returns the sum of all elements (uses BLAS's dasum)
+    def sum; GSLng.backend::gsl_blas_dasum(self.ptr) end
+
+    # Optimized version of: self += other * alpha (where alpha is a Numeric). Uses BLAS's daxpy.
+    def mul_add(other, alpha); GSLng.backend::gsl_blas_daxpy(alpha, other.ptr, self.ptr); return self end
+
+    #--------------------- misc -------------------------#
+    
     # Reverse the order of elements
     def reverse!; GSLng.backend::gsl_vector_reverse(self.ptr); return self end
     
     # Swap the i-th element with the j-th element
     def swap(i,j); GSLng.backend::gsl_vector_swap_elements(self.ptr, i, j); return self end
+
+		def sort!; GSLng.backend::gsl_sort_vector(self.ptr); return self end
+		def sort; self.dup.sort! end
+
+    # Copy other's values into self
+    def copy(other); GSLng.backend::gsl_vector_memcpy(self.ptr, other.ptr); return self end
+
+    #--------------------- set/get -------------------------#
 
 		# Access the i-th element (*NOTE*: throws exception if out-of-bounds).
 		# If /index/ is negative, it counts from the end (-1 is the last element)
@@ -170,6 +202,8 @@ module GSLng
     end
     alias_method :subvector, :view
 
+    #--------------------- predicate methods -------------------------#
+
     # if all elements are zero
     def zero?; GSLng.backend::gsl_vector_isnull(self.ptr) == 1 ? true : false end
 
@@ -181,6 +215,8 @@ module GSLng
 		
     # if all elements are non-negative (>=0)
     def nonnegative?; GSLng.backend::gsl_vector_isnonneg(self.ptr) == 1 ? true : false end
+
+    #--------------------- min/max -------------------------#
     
     def max; GSLng.backend::gsl_vector_max(self.ptr) end
 
@@ -206,26 +242,10 @@ module GSLng
     # Same as #min, but returns the index to the element
     def min_index; GSLng.backend::gsl_vector_min_index(self.ptr) end
 
-    # Same as #max, but returns the index to the element    
+    # Same as #max, but returns the index to the element
     def max_index; GSLng.backend::gsl_vector_max_index(self.ptr) end
-    
-    # Dot product between self and other (uses BLAS's ddot)
-    def dot(other)
-      out = FFI::Buffer.new(:double)
-      GSLng.backend::gsl_blas_ddot(self.ptr, other.ptr, out)
-      return out[0].get_double(0)
-    end
-    alias_method :^, :dot
-    
-    # Norm 2 of the vector (uses BLAS's dnrm2)
-    def norm; GSLng.backend::gsl_blas_dnrm2(self.ptr) end
-    alias_method :length, :norm
 
-    # Returns the sum of all elements (uses BLAS's dasum)
-    def sum; GSLng.backend::gsl_blas_dasum(self.ptr) end
-
-    # Optimized version of: self += other * alpha (where alpha is a Numeric). Uses BLAS's daxpy.
-    def mul_add(other, alpha); GSLng.backend::gsl_blas_daxpy(alpha, other.ptr, self.ptr); return self end
+    #--------------------- block handling -------------------------#
     
     # Yields the block for each element in the Vector
 		def each # :yield: obj
@@ -241,8 +261,7 @@ module GSLng
 		# See #map!. Returns a Vector.
 		def map(&block); self.dup.map!(block) end
 
-		def sort!; GSLng.backend::gsl_sort_vector(self.ptr); return self end
-		def sort; self.dup.sort! end
+    #--------------------- conversions -------------------------#
 
 		def join(sep = $,)
 			s = ''
@@ -251,9 +270,10 @@ module GSLng
 		end
 
 		def coerce(other)
-			if (Vector === other)
+      case other
+			when Vector
 				[ other, self ]
-			elsif (Numeric === other)
+			when Numeric
 				[ Vector.new(@size).set!(other), self ]
 			else
 				raise TypeError, "Can't coerce #{other.class} into #{self.class}"
@@ -271,6 +291,8 @@ module GSLng
 		def to_a
 			Array.new(@size) {|i| self[i]}
 		end
+
+    #--------------------- equality -------------------------#
 
 		# Element-by-element comparison (uses #each_with_index)
 		# Admits comparing to Array
