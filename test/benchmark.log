@@ -1,0 +1,16 @@
+Vector#join (internal/external iteration) - vector of 1000 elements
+      user     system      total        real
+internal:  0.570000   0.010000   0.580000 (  0.599863)
+external:  0.780000   0.000000   0.780000 (  0.790269)
+Norm (BLAS) - vector of 50000 elements
+      user     system      total        real
+GSLng  :  0.520000   0.000000   0.520000 (  0.526191)
+rb-gsl :  0.520000   0.010000   0.530000 (  0.526233)
+Vector product - two vectors of 5000 elements
+      user     system      total        real
+rb-gsl :  0.640000   0.000000   0.640000 (  0.641648)
+GSLng  :  0.650000   0.000000   0.650000 (  0.657617)
+Sort - vector of 5000 elements
+      user     system      total        real
+rb-gsl :  0.440000   0.000000   0.440000 (  0.441844)
+GSLng  :  0.440000   0.000000   0.440000 (  0.445220)

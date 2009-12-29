@@ -16,7 +16,7 @@ end
 n = 100
 size = 1000
 
-puts "Vector#join (internal/external iteration)"
+puts "Vector#join (internal/external iteration) - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.zero(size)
   x.report("internal:") {n.times {v.join(' ')}}
@@ -26,7 +26,7 @@ end
 n = 500
 size = 50000
 
-puts "Norm"
+puts "Norm (BLAS) - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
@@ -36,7 +36,7 @@ end
 
 n=5000
 size = 5000
-puts "Vector product"
+puts "Vector product - two vectors of #{size} elements"
 bm do |x|
   v,v2 = GSLng::Vector.random(size),GSLng::Vector.random(size)
   gv,gv2 = GSL::Vector.alloc(v.to_a),GSL::Vector.alloc(v2.to_a)
@@ -46,7 +46,7 @@ end
 
 n=500
 size = 5000
-puts "Sort"
+puts "Sort - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
