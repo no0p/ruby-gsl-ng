@@ -1,39 +1,53 @@
 module GSLng
+  # A fixed-size MxN matrix.
+  #
+  # =Examples
+	#  Matrix[[1,2,3],[2,3,4]] + Matrix[[0,2,0],[0,1,0]] => Matrix[[1,4,3],[2,4,4]]
+	#  Matrix[[1,2,3],[2,3,4]] + 0.5 => [[1.5,2.5,3.5],[2.5,3.5,4.5]]
+  #  Same goes for - operator.
+  #
+  #  Note that the * operator performs a real matrix-matrix and matrix-vector products.
+  #  To perform element-by-element multiplication use the ^ operator (or #multiply method) instead.
+  #  The division operator (/) works also element-by-element.
+	#
+  # =Notes
+  # See Vector notes
+  #
   class Matrix
-		attr_reader :n, :m, :ptr
+		attr_reader :m, :n, :ptr
 
-		alias_method :height, :n
-		alias_method :width, :m
-		alias_method :rows, :n
-		alias_method :columns, :m
+		alias_method :height, :m
+		alias_method :width, :n
+		alias_method :rows, :m
+		alias_method :columns, :n
 
 		# Returns [ #rows, #columns ]
-		def size; [ @n, @m ] end
+		def size; [ @m, @n ] end
 
     #--------------------- constructors -------------------------#
 
-		# Create a Matrix of n-by-m (rows and columns). If zero is true, the Matrix is initialized with zeros.
+		# Create a Matrix of m-by-n (rows and columns). If zero is true, the Matrix is initialized with zeros.
     # Otherwise, the Matrix will contain garbage.
 		# You can optionally pass a block, in which case #map_index! will be called with it (i.e.: it works like Array.new).
-    def initialize(n, m, zero = false)
-      @ptr = (zero ? GSLng.backend::gsl_matrix_calloc(n, m) : GSLng.backend::gsl_matrix_alloc(n, m))
+    def initialize(m, n, zero = false)
+      @ptr = (zero ? GSLng.backend::gsl_matrix_calloc(m, n) : GSLng.backend::gsl_matrix_alloc(m, n))
       GSLng.set_finalizer(self, :gsl_matrix_free, @ptr)
 
-      @n,@m = n,m
+      @m,@n = m,n
 			if (block_given?) then self.map_index!(&Proc.new) end
     end
 
     def initialize_copy(other) #:nodoc:
       ObjectSpace.undefine_finalizer(self) # TODO: ruby bug?
-      @ptr = GSLng.backend::gsl_matrix_alloc(other.n, other.m)
+      @ptr = GSLng.backend::gsl_matrix_alloc(other.m, other.n)
       GSLng.set_finalizer(self, :gsl_matrix_free, @ptr)
 
-      @n,@m = other.size
+      @m,@n = other.size
       GSLng.backend::gsl_matrix_memcpy(@ptr, other.ptr)
     end
 
-		# Same as Matrix.new(n, m, true)
-		def Matrix.zero(n, m); Matrix.new(n, m, true) end
+		# Same as Matrix.new(m, n, true)
+		def Matrix.zero(m, n); Matrix.new(m, n, true) end
 
 		# Create a matrix from an Array
     # If array is unidimensional, a row Matrix is created. If it is multidimensional, each sub-array
@@ -54,10 +68,10 @@ module GSLng
       Matrix.from_array(args)
 		end
     
-    # Generates a Matrix of n by m, of random numbers between 0 and 1.
+    # Generates a Matrix of m by n, of random numbers between 0 and 1.
     # NOTE: This simply uses Kernel::rand
-    def Matrix.random(n, m)
-			Matrix.new(n, m).map!{|x| Kernel::rand}
+    def Matrix.random(m, n)
+			Matrix.new(m, n).map!{|x| Kernel::rand}
     end
 		class << self; alias_method :rand, :random end
 
@@ -79,11 +93,11 @@ module GSLng
     def [](i, j = :*)
 			if (Symbol === i && Symbol === j) then return self
 			elsif (Symbol === i)
-				col = Vector.new(@n)
+				col = Vector.new(@m)
 				GSLng.backend::gsl_matrix_get_col(col.ptr, @ptr, j)
 				return col
 			elsif (Symbol === j)
-				row = Vector.new(@m)
+				row = Vector.new(@n)
 				GSLng.backend::gsl_matrix_get_row(row.ptr, @ptr, i)
 				return row
 			else
@@ -102,12 +116,12 @@ module GSLng
           GSLng.backend::gsl_matrix_memcpy(@ptr, x.ptr)
         end
 			elsif (Symbol === i)
-				col = Vector.new(@n)
+				col = Vector.new(@m)
         x,y = col.coerce(value)
 				GSLng.backend::gsl_matrix_set_col(@ptr, j, x.ptr)
 				return col
 			elsif (Symbol === j)
-  			row = Vector.new(@m)
+  			row = Vector.new(@n)
         x,y = row.coerce(value)
 				GSLng.backend::gsl_matrix_set_row(@ptr, i, x.ptr)
 				return row
@@ -118,67 +132,109 @@ module GSLng
 			return self
 		end
 
+    # Create a Matrix::View from this Vector.
+    # If either _m_ or _n_ are nil, they're computed from _x_, _y_ and the Matrix's #size
+    def view(x = 0, y = 0, m = nil, n = nil)
+      View.new(self, x, y, (m or @m - x), (n or @n - y))
+    end
+    alias_method :submatrix, :view
+
+    # TODO: add row/column views
+
     #--------------------- operators -------------------------#
     # Add other to self
-    def add(other)
+    def add!(other)
       case other
       when Numeric; GSLng.backend::gsl_matrix_add_constant(self.ptr, other.to_f)
       when Matrix; GSLng.backend::gsl_matrix_add(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
-				x.add(y)
+				x.add!(y)
 			end
 			return self
     end
 
     # Substract other from self
-    def sub(other)
+    def substract!(other)
       case other
       when Numeric; GSLng.backend::gsl_matrix_add_constant(self.ptr, -other.to_f)
       when Matrix; GSLng.backend::gsl_matrix_sub(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
-				x.sub(y)
+				x.substract!(y)
 			end
 			return self
     end
+    alias_method :sub!, :substract!
 
     # Multiply (element-by-element) other with self
-    def mul(other)
+    def multiply!(other)
       case other
       when Numeric; GSLng.backend::gsl_matrix_scale(other.to_f, self.ptr)
       when Matrix; GSLng.backend::gsl_matrix_mul_elements(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
-				x.mul(y)
+				x.multiply!(y)
 			end
 			return self
     end
+    alias_method :mul!, :multiply!
 
     # Divide (element-by-element) self by other
-    def div(other)
+    def divide!(other)
       case other
       when Numeric; GSLng.backend::gsl_matrix_scale(1.0 / other, self.ptr)
       when Matrix;  GSLng.backend::gsl_matrix_div_elements(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
-				x.div(y)
+				x.divide!(y)
 			end
 			return self
     end
+    alias_method :div!, :divide!
 
-    def +(other); self.dup.add(other) end
-    def -(other); self.dup.sub(other) end
-    def *(other); self.dup.mul(other) end
-    def /(other); self.dup.div(other) end
+    def +(other); self.dup.add!(other) end
+    def -(other); self.dup.substract!(other) end
+    def /(other); self.dup.divide!(other) end
 
-    #--------------------- misc -------------------------#
+    # Element-by-element product. Both matrices should have same dimensions.
+    def ^(other); self.dup.multiply!(other) end
+    alias_method :multiply, :^
+    alias_method :mul, :^
+
+    # Matrix Product. self#m should equal other#n2 (or other#size, if a Vector).
+    # TODO: some cases could be optimized when doing Matrix-Matrix, by using dgemv
+    def *(other)
+      case other
+      when Numeric
+        self.multiply(other)
+      when Vector
+        matrix = Matrix.new(self.m, other.n)
+        gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.to_matrix.ptr, 0, matrix.ptr)
+        return matrix
+      when Matrix
+        matrix = Matrix.new(self.m, other.n)
+        gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.ptr, 0, matrix.ptr)
+        return matrix
+      else
+        x,y = other.coerce(self)
+        x * y
+      end
+    end
+
+    #--------------------- swap rows/columns -------------------------#
 
     # Transposes in-place. Only for square matrices
     def transpose!; GSLng.backend::gsl_matrix_transpose(self.ptr); return self end
 
     # Returns the transpose of self, in a new matrix
-    def transpose; m = Matrix.new(@m, @n); GSLng.backend::gsl_matrix_transpose_memcpy(m.ptr, self.ptr); return m end
+    def transpose; matrix = Matrix.new(@n, @m); GSLng.backend::gsl_matrix_transpose_memcpy(matrix.ptr, self.ptr); return matrix end
+
+    def swap_columns(i, j); GSLng.backend::gsl_matrix_swap_columns(self.ptr, i, j); return self end
+    def swap_rows(i, j); GSLng.backend::gsl_matrix_swap_rows(self.ptr, i, j); return self end
+    
+    # Swap the i-th row with the j-th column. The Matrix must be square.
+    def swap_rowcol(i, j); GSLng.backend::gsl_matrix_swap_rowcol(self.ptr, i, j); return self end
 
     #--------------------- predicate methods -------------------------#
     
@@ -193,6 +249,9 @@ module GSLng
 		
     # if all elements are non-negative (>=0)
     def nonnegative?; GSLng.backend::gsl_matrix_isnonneg(@ptr) == 1 ? true : false end
+
+    # If this is a column Matrix
+    def column?; self.columns == 1 end
 
     #--------------------- min/max -------------------------#
 
@@ -237,6 +296,21 @@ module GSLng
 
     #--------------------- block handling -------------------------#
 
+    # Yields the specified block for each element going row-by-row
+    def each # :yields: elem
+      @m.times {|i| @n.times {|j| yield(self[i,j]) } }
+    end
+
+    # Yields the specified block for each element going row-by-row
+    def each_with_index # :yields: elem, i, j
+      @m.times {|i| @n.times {|j| yield(self[i,j], i, j) } }
+    end
+
+    # Same as #each, but faster. The catch is that this method returns nothing.
+    def fast_each(&block) #:yield: elem
+      GSLng.backend::gsl_matrix_each(self.ptr, block)
+    end
+
 		# Efficient map! implementation
 		def map!(&block); GSLng.backend::gsl_matrix_map(@ptr, block); return self end
 
@@ -257,12 +331,12 @@ module GSLng
     # TODO: make it faster
 		def to_s
       s = '['
-      @n.times do |i|
+      @m.times do |i|
         s += ' ' unless i == 0
-        @m.times do |j|
+        @n.times do |j|
           s += (j == 0 ? self[i,j].to_s : ' ' + self[i,j].to_s)
         end
-        s += (i == (@n-1) ? ']' : ";\n")
+        s += (i == (@m-1) ? ']' : ";\n")
       end
 
       return s
@@ -274,7 +348,7 @@ module GSLng
       when Matrix
         [ other, self ]
       when Numeric
-        [ Matrix.new(@n, @m).fill!(other), self ]
+        [ Matrix.new(@m, @n).fill!(other), self ]
       else
         raise TypeError, "Can't coerce #{other.class} into #{self.class}"
       end
@@ -284,10 +358,10 @@ module GSLng
 
     # TODO: make it faster
     def ==(other)
-      if (self.n != other.n || self.m != other.m) then return false end
+      if (self.m != other.m || self.n != other.n) then return false end
 
-      @n.times do |i|
-        @m.times do |j|
+      @m.times do |i|
+        @n.times do |j|
           if (self[i,j] != other[i,j]) then return false end
         end
       end

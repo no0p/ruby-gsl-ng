@@ -12,6 +12,7 @@ lib/gslng/backend_components/matrix.rb
 lib/gslng/backend_components/vector.rb
 lib/gslng/finalizer.rb
 lib/gslng/matrix.rb
+lib/gslng/matrix_view.rb
 lib/gslng/vector.rb
 lib/gslng/vector_view.rb
 test/benchmark.rb

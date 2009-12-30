@@ -44,6 +44,13 @@ module GSLng
     attach_function :gsl_matrix_max_index, [ :pointer, :buffer_out, :buffer_out ], :void
     attach_function :gsl_matrix_min_index, [ :pointer, :buffer_out, :buffer_out ], :void
     attach_function :gsl_matrix_minmax_index, [ :pointer, :buffer_out, :buffer_out, :buffer_out, :buffer_out ], :void
+
+    # exchange elements
+    attach_function :gsl_matrix_swap_rows, [ :pointer, :size_t, :size_t ], :int
+    attach_function :gsl_matrix_swap_columns, [ :pointer, :size_t, :size_t ], :int
+    attach_function :gsl_matrix_swap_rowcol, [ :pointer, :size_t, :size_t ], :int
+    attach_function :gsl_matrix_transpose_memcpy, [ :pointer, :pointer ], :int
+    attach_function :gsl_matrix_transpose, [ :pointer ], :int
 		
     # From local extension
 		callback :gsl_matrix_callback, [ :double ], :double
@@ -54,5 +61,13 @@ module GSLng
 
 		callback :gsl_matrix_each_callback, [ :double ], :void
 		attach_function :gsl_matrix_each, [ :pointer, :gsl_matrix_each_callback ], :void
+
+    # views
+    attach_function :gsl_matrix_submatrix2, [ :pointer, :size_t, :size_t, :size_t, :size_t ], :pointer
+
+    # BLAS interface
+    enum :cblas_transpose_t, [ :no_transpose, 111, :transpose, :conjugate_transpose ]
+    attach_function :gsl_blas_dgemv, [ :cblas_transpose_t, :double, :pointer, :pointer, :double, :pointer ], :int
+    attach_function :gsl_blas_dgemm, [ :cblas_transpose_t, :cblas_transpose_t, :double, :pointer, :pointer, :double, :pointer ], :int
 	end
 end

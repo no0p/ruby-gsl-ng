@@ -11,6 +11,7 @@ module GSLng
 	def GSLng.backend; @backend end
 end
 
+require 'gslng_extensions'
 require 'gslng/backend_components/vector'
 require 'gslng/backend_components/matrix'
 require 'gslng/backend_components/error_handling'

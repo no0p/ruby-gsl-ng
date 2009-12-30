@@ -87,3 +87,11 @@ extern "C" void gsl_matrix_each(gsl_matrix* m, gsl_matrix_each_callback_t callba
     for (size_t j = 0; j < size2; j++)
   		(*callback)(*gsl_matrix_const_ptr(m, i, j));
 }
+
+// Hide the view in a new matrix (gsl_matrix_submatrix)
+extern "C" gsl_matrix* gsl_matrix_submatrix2(gsl_matrix* m_ptr, size_t x, size_t y, size_t n, size_t m) {
+  gsl_matrix_view view = gsl_matrix_submatrix(m_ptr, x, y, n, m);
+  gsl_matrix* matrix_view = gsl_matrix_alloc(view.matrix.size1, view.matrix.size2);
+  *matrix_view = view.matrix;
+  return matrix_view;
+}

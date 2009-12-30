@@ -4,18 +4,14 @@ module GSLng
   # =Examples
 	#  Vector[1,2,3] + Vector[2,3,4] => Vector[3,5,7]
 	#  Vector[1,2,3] + 0.5 => Vector[1.5,2.5,3.5]
-	# Same goes for *, /, and - operators. The are also self-modifying versions (#add, #mul, #div, #sub).
 	#
-  # Note also that operator ^ produces the #dot product:
-	#  Vector[1,2,3] ^ Vector[2,3,4] => 20
+  # Note that operator * is defined as the element-by-element product. To perform a dot product use the ^ operator (or the #dot method)
 	#
   # =Notes
-  # * This class includes Enumerable, but certain methods are redefined (like #max and #min)
-  #   for fast versions that don't use #each. Calling #each (and therefore, any other Enumerable's method) is slower.
 	# * #each is implemented through calls to #[], which can be relatively slow (compared to direct C pointer access)
-	#   for big Vectors. It would be possible to have a faster version that iterates on the C-side and calls a block for each
-	#   element, but in that case it wouldn't be possible to expect a return value of any type. This complicates things for methods like
-	#   #any? which expect a boolean value.
+	#   for big Vectors. There's a faster version (#fast_each) that can be used when there's not return value expected from the #each call.
+  # * Since this class includes Enumerable, and Enumerable's methods call #each, certain methods are redefined (like #max and #min)
+  #   so they use #fast_each instead. Thus, any other Enumerable's method not defined here will be slower.
 	# * Some functions (like #sum, #dot, and others) use BLAS functions (through GSLng's CBLAS interface).
 	# * In contrary to Array, operators [] and []= will raise an exception when accessing out-of-bounds elements.
   #
@@ -31,20 +27,19 @@ module GSLng
     # Otherwise, the vector will contain garbage.
 		# You can optionally pass a block, in which case #map_index! will be called with it (i.e.: it works like Array.new).
     def initialize(n, zero = false)
+      @size = n
       @ptr = (zero ? GSLng.backend::gsl_vector_calloc(n) : GSLng.backend::gsl_vector_alloc(n))
       GSLng.set_finalizer(self, :gsl_vector_free, @ptr)
-      
-      @size = n # TODO: extract from @ptr
-
 			if (block_given?) then self.map_index!(&Proc.new) end
     end
 
     def initialize_copy(other) #:nodoc:
       ObjectSpace.undefine_finalizer(self) # TODO: ruby bug?
+      
+      @size = other.size
       @ptr = GSLng.backend::gsl_vector_alloc(other.size)
       GSLng.set_finalizer(self, :gsl_vector_free, @ptr)
       
-      @size = other.size
       GSLng.backend::gsl_vector_memcpy(@ptr, other.ptr)
     end
 
@@ -86,58 +81,61 @@ module GSLng
     #--------------------- operators -------------------------#
     
     # Add other to self
-    def add(other)
+    def add!(other)
       case other
       when Numeric; GSLng.backend::gsl_vector_add_constant(self.ptr, other.to_f)
       when Vector; GSLng.backend::gsl_vector_add(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
-				x.add(y)
+				x.add!(y)
 			end
 			return self
     end
     
     # Substract other from self
-    def sub(other)
+    def substract!(other)
       case other
       when Numeric; GSLng.backend::gsl_vector_add_constant(self.ptr, -other.to_f)
       when Vector; GSLng.backend::gsl_vector_sub(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
-				x.sub(y)
+				x.sub!(y)
 			end
 			return self
     end
+    alias_method :sub!, :substract!
     
     # Multiply (element-by-element) other with self
-    def mul(other)
+    def multiply!(other)
       case other
       when Numeric; GSLng.backend::gsl_blas_dscal(other.to_f, self.ptr)
       when Vector; GSLng.backend::gsl_vector_mul(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
-				x.mul(y)
+				x.mul!(y)
 			end
 			return self
     end
+    alias_method :mul!, :multiply!
     
     # Divide (element-by-element) self by other
-    def div(other)
+    def divide!(other)
       case other
       when Numeric; GSLng.backend::gsl_blas_dscal(1.0 / other, self.ptr)
       when Vector;  GSLng.backend::gsl_vector_div(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
-				x.div(y)
+				x.div!(y)
 			end
 			return self
     end
+    alias_method :div!, :divide!
 
-    def +(other); self.dup.add(other) end
-    def -(other); self.dup.sub(other) end
-    def *(other); self.dup.mul(other) end
-    def /(other); self.dup.div(other) end
-    
+    def +(other); self.dup.add!(other) end
+    def -(other); self.dup.sub!(other) end
+    def *(other); self.dup.mul!(other) end
+    def /(other); self.dup.div!(other) end
+
     #--------------------- other math -------------------------#
 
     # Dot product between self and other (uses BLAS's ddot)
@@ -147,7 +145,7 @@ module GSLng
       return out[0].get_double(0)
     end
     alias_method :^, :dot
-
+    
     # Norm 2 of the vector (uses BLAS's dnrm2)
     def norm; GSLng.backend::gsl_blas_dnrm2(self.ptr) end
     alias_method :length, :norm
@@ -252,6 +250,11 @@ module GSLng
 			@size.times {|i| yield(self[i])}
 		end
 
+    # Same as #each, but faster. The catch is that this method returns nothing.
+    def fast_each(&block) #:yield: obj
+      GSLng.backend::gsl_vector_each(self.ptr, block)
+    end
+
 		# Efficient map! implementation
 		def map!(&block); GSLng.backend::gsl_vector_map(self.ptr, block); return self end
 
@@ -291,6 +294,22 @@ module GSLng
 		def to_a
 			Array.new(@size) {|i| self[i]}
 		end
+
+    # Create a row matrix from this vector
+    def to_matrix
+      m = Matrix.new(1, @size)
+      GSLng.backend::gsl_matrix_set_row(m.ptr, 0, self.ptr)
+      return m
+    end
+    alias_method :to_row, :to_matrix
+
+    # Create a column matrix from this vector
+    def transpose
+      Matrix.new(@size, 1)
+      GSLng.backend::gsl_matrix_set_col(m.ptr, 0, self.ptr)
+      return m
+    end
+    alias_method :to_column, :transpose
 
     #--------------------- equality -------------------------#
 

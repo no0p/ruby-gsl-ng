@@ -5,22 +5,14 @@ require 'rbgsl'
 require 'narray'
 include Benchmark
 
-def my_join(v)
-  s = ' '
-  v.each do |e|
-    s += (s.empty?() ? e.to_s : ' ' + e.to_s)
-  end
-  return s
-end
-
 n = 100
-size = 1000
+size = 5000
 
-puts "Vector#join (internal/external iteration) - vector of #{size} elements"
+puts "Vector#each vs Vector#fast_each - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.zero(size)
-  x.report("internal:") {n.times {v.join(' ')}}
-  x.report("external:") {n.times {my_join(v)}}
+  x.report("each      :") {n.times {s = 0; v.each do |e| s += e end}}
+  x.report("fast_each :") {n.times {s = 0; v.fast_each do |e| s += e end}}
 end
 
 n = 500
@@ -30,8 +22,8 @@ puts "Norm (BLAS) - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
-  x.report("GSLng  :") {n.times {v.norm}}
   x.report("rb-gsl :") {n.times {gv.dnrm2}}
+  x.report("GSLng  :") {n.times {v.norm}}
 end
 
 n=5000
