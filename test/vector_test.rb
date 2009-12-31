@@ -61,6 +61,7 @@ class VectorTest < Test::Unit::TestCase
 	end
 
 	def test_other
+    assert_equal(Matrix[1,2,3], Vector[1,2,3].to_matrix)
 		assert_equal(Vector[1,2,3], Vector[1,2,3].to_a)
 		assert_equal(Vector[1,2,3], Vector[3,1,2].sort)
 		assert_equal(6, Vector[3,1,2].sum)

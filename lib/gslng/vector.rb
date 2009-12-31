@@ -133,7 +133,17 @@ module GSLng
 
     def +(other); self.dup.add!(other) end
     def -(other); self.dup.sub!(other) end
-    def *(other); self.dup.mul!(other) end
+
+    def *(other)
+      case other
+      when Numeric; self.dup.mul!(other)
+      when Vector; self.dup.mul!(other)
+      else
+				x,y = other.coerce(self)
+				x * y
+			end
+    end
+
     def /(other); self.dup.div!(other) end
 
     #--------------------- other math -------------------------#
@@ -198,7 +208,9 @@ module GSLng
       end
       View.new(self, offset, size, stride)
     end
-    alias_method :subvector, :view
+    alias_method :subvector_view, :view
+    
+    def subvector(*args); subvector_view(*args).to_vector end
 
     #--------------------- predicate methods -------------------------#
 
@@ -305,7 +317,7 @@ module GSLng
 
     # Create a column matrix from this vector
     def transpose
-      Matrix.new(@size, 1)
+      m = Matrix.new(@size, 1)
       GSLng.backend::gsl_matrix_set_col(m.ptr, 0, self.ptr)
       return m
     end

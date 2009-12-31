@@ -132,14 +132,23 @@ module GSLng
 			return self
 		end
 
+    #--------------------- view -------------------------#
+
     # Create a Matrix::View from this Vector.
     # If either _m_ or _n_ are nil, they're computed from _x_, _y_ and the Matrix's #size
     def view(x = 0, y = 0, m = nil, n = nil)
       View.new(self, x, y, (m or @m - x), (n or @n - y))
     end
-    alias_method :submatrix, :view
+    alias_method :submatrix_view, :view
+    
+    # Shorthand for submatrix_view(..).to_matrix
+    def submatrix(*args); self.submatrix_view(*args).to_matrix end
 
-    # TODO: add row/column views
+    def column_view(i, offset = 0, size = nil); self.view(offset, i, (size or (self.m - offset)), 1) end
+    def column(*args); self.column_view(*args).to_matrix end
+
+    def row_view(i, offset = 0, size = nil); self.view(i, offset, 1, (size or (self.n - offset))) end
+    def row(*args); self.row_view(*args).to_matrix end
 
     #--------------------- operators -------------------------#
     # Add other to self
@@ -210,11 +219,11 @@ module GSLng
         self.multiply(other)
       when Vector
         matrix = Matrix.new(self.m, other.n)
-        gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.to_matrix.ptr, 0, matrix.ptr)
+        GSLng.backend::gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.to_matrix.ptr, 0, matrix.ptr)
         return matrix
       when Matrix
         matrix = Matrix.new(self.m, other.n)
-        gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.ptr, 0, matrix.ptr)
+        GSLng.backend::gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.ptr, 0, matrix.ptr)
         return matrix
       else
         x,y = other.coerce(self)
@@ -328,7 +337,6 @@ module GSLng
 			return s
 		end
 
-    # TODO: make it faster
 		def to_s
       s = '['
       @m.times do |i|
@@ -349,6 +357,8 @@ module GSLng
         [ other, self ]
       when Numeric
         [ Matrix.new(@m, @n).fill!(other), self ]
+      when Vector
+        [ other.to_matrix, self ]
       else
         raise TypeError, "Can't coerce #{other.class} into #{self.class}"
       end
