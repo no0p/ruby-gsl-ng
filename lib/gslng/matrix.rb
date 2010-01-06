@@ -186,7 +186,7 @@ module GSLng
     # Multiply (element-by-element) other with self
     def multiply!(other)
       case other
-      when Numeric; GSLng.backend::gsl_matrix_scale(other.to_f, self.ptr)
+      when Numeric; GSLng.backend::gsl_matrix_scale(self.ptr, other.to_f)
       when Matrix; GSLng.backend::gsl_matrix_mul_elements(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)
@@ -199,7 +199,7 @@ module GSLng
     # Divide (element-by-element) self by other
     def divide!(other)
       case other
-      when Numeric; GSLng.backend::gsl_matrix_scale(1.0 / other, self.ptr)
+      when Numeric; GSLng.backend::gsl_matrix_scale(self.ptr, 1.0 / other)
       when Matrix;  GSLng.backend::gsl_matrix_div_elements(self.ptr, other.ptr)
       else
 				x,y = other.coerce(self)

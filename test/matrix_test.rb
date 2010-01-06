@@ -75,6 +75,7 @@ class TestMatrix < Test::Unit::TestCase
     assert_equal(Matrix[[0,2,0],[0,4,0],[0,6,0]],Matrix[1,2,3].transpose * Vector[0,2,0])
     assert_equal(Matrix[[4],[6]],Matrix[[1,2,3],[2,3,4]] * Vector[0,2,0].transpose)
     assert_equal(Matrix[4, 6],Vector[0,2,0] * Matrix[[1,2],[2,3],[4,5]])
+    assert_equal(Matrix[[3,6],[9,12]],Matrix[[1,2],[3,4]] * 3)
 
     assert_equal(Matrix[[4,6],[2,3]],Matrix[[0,2,0],[0,1,0]] * Matrix[[1,2],[2,3],[4,5]])
     assert_equal(Matrix[[0,4,0],[0,1,0]],Matrix[[0,2,0],[0,1,0]] ^ Matrix[[0,2,0],[0,1,0]])
