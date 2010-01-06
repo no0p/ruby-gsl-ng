@@ -223,14 +223,14 @@ module GSLng
     alias_method :multiply, :^
     alias_method :mul, :^
 
-    # Matrix Product. self#m should equal other#n2 (or other#size, if a Vector).
+    # Matrix Product. self#n should equal other#m (or other#size, if a Vector).
     # TODO: some cases could be optimized when doing Matrix-Matrix, by using dgemv
     def *(other)
       case other
       when Numeric
         self.multiply(other)
       when Vector
-        matrix = Matrix.new(self.m, other.n)
+        matrix = Matrix.new(self.m, other.size)
         GSLng.backend::gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.to_matrix.ptr, 0, matrix.ptr)
         return matrix
       when Matrix
