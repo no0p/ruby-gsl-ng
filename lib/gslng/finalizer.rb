@@ -1,5 +1,5 @@
 module GSLng
-  def GSLng.set_finalizer(obj, func, ptr)
-    ObjectSpace.define_finalizer(obj, lambda {|id| GSLng::Backend.send(func, ptr)})
+  def GSLng.set_finalizer(obj, func, ptr) #:nodoc:
+    ObjectSpace.define_finalizer(obj, lambda {|id| GSLng.backend.send(func, ptr)})
   end
 end

@@ -8,6 +8,8 @@ include Benchmark
 n = 100
 size = 5000
 
+puts "This is GSLng #{GSLng::VERSION}"; puts
+
 puts "Vector#each vs Vector#fast_each - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.zero(size)
@@ -33,7 +35,7 @@ bm do |x|
   v,v2 = GSLng::Vector.random(size),GSLng::Vector.random(size)
   gv,gv2 = GSL::Vector.alloc(v.to_a),GSL::Vector.alloc(v2.to_a)
   x.report("rb-gsl :") {n.times {gv.mul!(gv2)}}
-  x.report("GSLng  :") {n.times {v.mul(v2)}}
+  x.report("GSLng  :") {n.times {v.mul!(v2)}}
 end
 
 n=500

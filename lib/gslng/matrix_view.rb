@@ -18,7 +18,7 @@ module GSLng
       end
 
       # Returns a Matrix (*NOT* a View) copied from this view. In other words,
-      # you'll get a Matrix which you can modify without modifying #owner elements
+      # you'll get a Matrix which you can modify without modifying #owner elements.
       def dup
         matrix = Matrix.new(@m, @n)
         GSLng.backend::gsl_matrix_memcpy(matrix.ptr, @ptr)
@@ -27,10 +27,12 @@ module GSLng
       alias_method :clone, :dup
       alias_method :to_matrix, :dup
 
-      def view; raise "Can't create a View from a View" end #:nodoc:
+      def view  #:nodoc:
+        raise "Can't create a View from a View"
+      end
 
-      def inspect
-        "VecView#{self}"
+      def inspect #:nodoc:
+        "#{self}:MatrixView"
       end
     end
   end

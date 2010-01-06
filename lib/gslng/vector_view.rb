@@ -27,10 +27,12 @@ module GSLng
       alias_method :clone, :dup
       alias_method :to_vector, :dup
 
-      def view; raise "Can't create a View from a View" end #:nodoc:
+      def view #:nodoc:
+        raise "Can't create a View from a View"
+      end
 
-      def inspect
-        "VecView#{self}"
+      def inspect #:nodoc:
+        "#{self}:VectorView"
       end
     end
   end

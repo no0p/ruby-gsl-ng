@@ -7,8 +7,10 @@ module GSLng
     extend FFI::Library
   end
 
-	# Returns the internal backend module
-	def GSLng.backend; @backend end
+  # Returns the internal backend module
+	def GSLng.backend
+    @backend
+  end
 end
 
 require 'gslng_extensions'

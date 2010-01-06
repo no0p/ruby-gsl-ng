@@ -21,6 +21,8 @@ class TestMatrix < Test::Unit::TestCase
     assert_equal("[0.0 0.0 0.0]", Matrix[0, 0, 0].to_s)
     assert_equal("[0.0 1.0 2.0]", Matrix[0,1,2].to_s)
     assert_equal("[1.0 2.0 3.0;\n 2.0 3.0 4.0]", Matrix[[1,2,3],[2,3,4]].to_s)
+    assert_equal("0.0 0.0 0.0", Matrix[0, 0, 0].join(' '))
+    assert_equal("1.0 2.0 3.0 2.0 3.0 4.0", Matrix[[1,2,3],[2,3,4]].join(' '))
   end
 
   def test_equal

@@ -1,18 +1,12 @@
 module GSLng
   # A fixed-size MxN matrix.
   #
-  # =Examples
-	#  Matrix[[1,2,3],[2,3,4]] + Matrix[[0,2,0],[0,1,0]] => Matrix[[1,4,3],[2,4,4]]
-	#  Matrix[[1,2,3],[2,3,4]] + 0.5 => [[1.5,2.5,3.5],[2.5,3.5,4.5]]
-  #  Same goes for - operator.
-  #
-  #  Note that the * operator performs a real matrix-matrix and matrix-vector products.
-  #  To perform element-by-element multiplication use the ^ operator (or #multiply method) instead.
-  #  The division operator (/) works also element-by-element.
-	#
   # =Notes
-  # See Vector notes
-  #
+  # See Vector notes. Everything applies with the following differences/additions:
+  # * The * operator performs actual matrix-matrix and matrix-vector products. To perform element-by-element
+  #   multiplication use the ^ operator (or multiply method) instead. The rest of the operators work element-by-element.
+  # * Operators can handle matrix-matrix, matrix-vector and matrix-scalar (also in reversed order). See #coerce.
+  # * The [] and []= operators can handle a "wildcard" value for any dimension, just like MATLAB's colon (:).
   class Matrix
 		attr_reader :m, :n, :ptr
 
@@ -63,7 +57,10 @@ module GSLng
       end
 		end
 
-		# Create a Matrix from an Array of Arrays/Ranges (see #from_array)
+		# Create a Matrix from an Array of Arrays/Ranges (see #from_array). For example:
+    #  Matrix[[1,2],[3,4]]
+    #  Matrix[1,2,3]
+    #  Matrix[[1..2],[5..10]]
 		def Matrix.[](*args)
       Matrix.from_array(args)
 		end
@@ -77,17 +74,20 @@ module GSLng
 
     #--------------------- setting values -------------------------#
 
+    # Set all values to _v_
     def all!(v); GSLng.backend::gsl_matrix_set_all(@ptr, v); return self end
     alias_method :set!, :all!
     alias_method :fill!, :all!
 
+    # Set all values to zero
     def zero!; GSLng.backend::gsl_matrix_set_zero(@ptr); return self end
 
+    # Set the identity matrix values
     def identity; GSLng.backend::gsl_matrix_set_identity(@ptr); return self end
 
     #--------------------- set/get -------------------------#
 
-		# Access the element (i,j), which means (row,column) (*NOTE*: throws exception if out-of-bounds).
+		# Access the element (i,j), which means (row,column). *NOTE*: throws exception if out-of-bounds.
 		# If either i or j are :* or :all, it serves as a wildcard for that dimension, returning all rows or columns,
 		# respectively.
     def [](i, j = :*)
@@ -105,7 +105,7 @@ module GSLng
 			end
 		end
 
-		# Set the element (i,j), which means (row,column) (*NOTE*: throws exception if out-of-bounds).
+		# Set the element (i,j), which means (row,column). *NOTE*: throws exception if out-of-bounds.
 		# Same indexing options as #[].
     # _value_ can be a single Numeric, a Vector or a Matrix, depending on the indexing.
     def []=(i, j, value)
@@ -134,23 +134,30 @@ module GSLng
 
     #--------------------- view -------------------------#
 
-    # Create a Matrix::View from this Vector.
+    # Create a Matrix::View from this Matrix.
     # If either _m_ or _n_ are nil, they're computed from _x_, _y_ and the Matrix's #size
     def view(x = 0, y = 0, m = nil, n = nil)
       View.new(self, x, y, (m or @m - x), (n or @n - y))
     end
     alias_method :submatrix_view, :view
     
-    # Shorthand for submatrix_view(..).to_matrix
+    # Shorthand for submatrix_view(..).to_matrix.
     def submatrix(*args); self.submatrix_view(*args).to_matrix end
 
+    # Creates a Matrix::View for the i-th column
     def column_view(i, offset = 0, size = nil); self.view(offset, i, (size or (self.m - offset)), 1) end
+
+    # Analogous to #submatrix
     def column(*args); self.column_view(*args).to_matrix end
 
+    # Creates a Matrix::View for the i-th row
     def row_view(i, offset = 0, size = nil); self.view(i, offset, 1, (size or (self.n - offset))) end
+
+    # Analogous to #submatrix
     def row(*args); self.row_view(*args).to_matrix end
 
     #--------------------- operators -------------------------#
+
     # Add other to self
     def add!(other)
       case other
@@ -202,8 +209,13 @@ module GSLng
     end
     alias_method :div!, :divide!
 
+    # Element-by-element addition
     def +(other); self.dup.add!(other) end
+
+    # Element-by-element substraction
     def -(other); self.dup.substract!(other) end
+
+    # Element-by-element division
     def /(other); self.dup.divide!(other) end
 
     # Element-by-element product. Both matrices should have same dimensions.
@@ -264,8 +276,10 @@ module GSLng
 
     #--------------------- min/max -------------------------#
 
+    # Maximum element of the Matrix
     def max; GSLng.backend::gsl_matrix_max(self.ptr) end
 
+    # Minimum element of the Matrix
     def min; GSLng.backend::gsl_matrix_min(self.ptr) end
 
     # Same as Array#minmax
@@ -330,13 +344,17 @@ module GSLng
 		def map(&block); self.dup.map!(block) end
 
     #--------------------- conversions -------------------------#
-    
+
+    # Same as Array#join, for example:
+    #  Matrix[[1,2],[2,3]].join => "1.0 2.0 2.0 3.0"
     def join(sep = $,)
 			s = ''
-			GSLng.backend::gsl_matrix_each(@ptr, lambda {|e| s += (s.empty?() ? e.to_s : sep + e.to_s)})
+			GSLng.backend::gsl_matrix_each(@ptr, lambda {|e| s += (s.empty?() ? e.to_s : "#{sep}#{e}")})
 			return s
 		end
 
+    # Converts the matrix to a String, separating each element with a space and each row with a ';' and a newline:
+    #  Matrix[[1,2],[2,3]] => "[1.0 2.0;\n 2.0 3.0]"
 		def to_s
       s = '['
       @m.times do |i|
@@ -349,8 +367,14 @@ module GSLng
 
       return s
 		end
-    alias_method :inspect, :to_s
 
+    def inspect #:nodoc:
+      "#{self}:Matrix"
+    end
+
+    # Coerces _other_ to be of Matrix class.
+    # If _other_ is a scalar (Numeric) a Matrix filled with _other_ values is created.
+    # Vectors are coerced using Vector#to_matrix (which results in a row matrix).
     def coerce(other)
       case other
       when Matrix
@@ -366,7 +390,7 @@ module GSLng
 
     #--------------------- equality -------------------------#
 
-    # TODO: make it faster
+    # Element-by-element comparison.
     def ==(other)
       if (self.m != other.m || self.n != other.n) then return false end
 

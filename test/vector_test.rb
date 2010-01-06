@@ -22,6 +22,7 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal("[0.0, 0.0, 0.0]", Vector.zero(3).to_s)
 		assert_equal("[0.0, 1.0, 2.0]", Vector.new(3) {|i| i}.to_s)
 		assert_equal("[1.0, 2.0, 3.0]", Vector[1,2,3].to_s)
+    assert_equal("1.0 2.0 3.0", Vector[1,2,3].join(' '))
 	end
 
 	def test_equal

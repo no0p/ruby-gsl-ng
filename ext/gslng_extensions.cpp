@@ -35,6 +35,14 @@ extern "C" void gsl_vector_each(gsl_vector* v, gsl_vector_each_callback_t callba
 		(*callback)(*gsl_vector_const_ptr(v, i));
 }
 
+// A fast "each_with_index" for cases where there's no expected return value from the block
+typedef void (*gsl_vector_each_with_index_callback_t)(double, size_t);
+
+extern "C" void gsl_vector_each_with_index(gsl_vector* v, gsl_vector_each_with_index_callback_t callback) {
+	for (size_t i = 0; i < v->size; i++)
+		(*callback)(*gsl_vector_const_ptr(v, i), i);
+}
+
 // Hide the view in a new vector (gsl_vector_subvector)
 extern "C" gsl_vector* gsl_vector_subvector_with_stride2(gsl_vector* v, size_t offset, size_t stride, size_t n) {
   gsl_vector_view view = gsl_vector_subvector_with_stride(v, offset, stride, n);

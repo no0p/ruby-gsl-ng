@@ -66,6 +66,9 @@ module GSLng
 		callback :gsl_vector_each_callback, [ :double ], :void
 		attach_function :gsl_vector_each, [ :pointer, :gsl_vector_each_callback ], :void
 
+		callback :gsl_vector_each_with_index_callback, [ :double, :size_t ], :void
+		attach_function :gsl_vector_each_with_index, [ :pointer, :gsl_vector_each_with_index_callback ], :void
+
 		# Sorting
 		attach_function :gsl_sort_vector, [ :pointer ], :void
 	end
