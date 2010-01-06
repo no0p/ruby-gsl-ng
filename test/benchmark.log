@@ -2,17 +2,21 @@ This is GSLng 0.2.0
 
 Vector#each vs Vector#fast_each - vector of 5000 elements
       user     system      total        real
-each      :  0.870000   0.000000   0.870000 (  0.905036)
-fast_each :  0.550000   0.000000   0.550000 (  0.590695)
+each      :  0.850000   0.000000   0.850000 (  0.861225)
+fast_each :  0.560000   0.000000   0.560000 (  0.568771)
+
 Norm (BLAS) - vector of 50000 elements
       user     system      total        real
-rb-gsl :  0.500000   0.000000   0.500000 (  0.537483)
-GSLng  :  0.510000   0.000000   0.510000 (  0.529940)
+rb-gsl :  0.530000   0.000000   0.530000 (  0.521653)
+GSLng  :  0.520000   0.000000   0.520000 (  0.522088)
+
 Vector product - two vectors of 5000 elements
       user     system      total        real
-rb-gsl :  0.600000   0.000000   0.600000 (  0.637335)
-GSLng  :  0.610000   0.000000   0.610000 (  0.644934)
+rb-gsl :  0.630000   0.000000   0.630000 (  0.639473)
+GSLng  :  0.650000   0.000000   0.650000 (  0.647286)
+
 Sort - vector of 5000 elements
       user     system      total        real
-rb-gsl :  0.420000   0.000000   0.420000 (  0.453559)
-GSLng  :  0.440000   0.000000   0.440000 (  0.445965)
+rb-gsl :  0.440000   0.010000   0.450000 (  0.441979)
+GSLng  :  0.440000   0.000000   0.440000 (  0.443522)
+

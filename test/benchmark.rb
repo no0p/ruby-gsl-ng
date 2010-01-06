@@ -16,6 +16,7 @@ bm do |x|
   x.report("each      :") {n.times {s = 0; v.each do |e| s += e end}}
   x.report("fast_each :") {n.times {s = 0; v.fast_each do |e| s += e end}}
 end
+puts
 
 n = 500
 size = 50000
@@ -27,6 +28,7 @@ bm do |x|
   x.report("rb-gsl :") {n.times {gv.dnrm2}}
   x.report("GSLng  :") {n.times {v.norm}}
 end
+puts
 
 n=5000
 size = 5000
@@ -37,6 +39,7 @@ bm do |x|
   x.report("rb-gsl :") {n.times {gv.mul!(gv2)}}
   x.report("GSLng  :") {n.times {v.mul!(v2)}}
 end
+puts
 
 n=500
 size = 5000
@@ -47,3 +50,4 @@ bm do |x|
   x.report("rb-gsl :") {n.times {v.sort!}}
   x.report("GSLng  :") {n.times {gv.sort!}}
 end
+puts
