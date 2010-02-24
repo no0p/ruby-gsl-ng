@@ -5,6 +5,7 @@ module GSLng
 	# If ruby had "private" modules I wouldn't have to do this.
   @backend = Module.new do
     extend FFI::Library
+    ffi_lib(FFI::CURRENT_PROCESS)
   end
 
   # Returns the internal backend module

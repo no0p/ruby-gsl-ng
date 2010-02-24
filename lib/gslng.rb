@@ -7,5 +7,5 @@ require 'gslng/matrix'
 require 'gslng/matrix_view'
 
 module GSLng
-  VERSION = "0.2.0"
+  VERSION = "0.2.1"
 end

@@ -1,3 +1,6 @@
+=== 0.2.1
+* Fixed for FFI 0.6.0
+
 === 0.2.0
 * Completed Vector
 * Added Matrix (mostly complete)
