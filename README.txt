@@ -1,6 +1,6 @@
 = Ruby/GSL-ng
 
-* http://ruby-gsl-ng.googlecode.com
+* http://wiki.github.com/v01d/ruby-gsl-ng/
 
 == DESCRIPTION:
 
