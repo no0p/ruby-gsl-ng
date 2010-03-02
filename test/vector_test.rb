@@ -21,6 +21,7 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal("[0.0]", Vector.zero(1).to_s)
 		assert_equal("[0.0, 0.0, 0.0]", Vector.zero(3).to_s)
 		assert_equal("[0.0, 1.0, 2.0]", Vector.new(3) {|i| i}.to_s)
+    assert_equal("[1.0, 2.0, 3.0]", Vector.new(3) {|i| i+1}.to_s)
 		assert_equal("[1.0, 2.0, 3.0]", Vector[1,2,3].to_s)
     assert_equal("1.0 2.0 3.0", Vector[1,2,3].join(' '))
 	end
@@ -32,6 +33,13 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal(Vector.zero(3), Vector.zero(3))
 		assert_not_equal(Vector.zero(4), Vector.zero(3))		
 	end
+
+  def test_each
+    assert_equal([1,2,4], Vector[1.1,2.1,3.8].map_array(&:round))
+    assert_raise {Vector[1,2,3].fast_each}
+    assert_raise {Vector[1,2,3].each}
+    assert_equal(Vector[1,2,4],Vector[1.1,2.1,3.8].map!(&:round))
+  end
 
 	def test_copies
 		v1 = Vector[1,2,3]

@@ -28,7 +28,7 @@ module GSLng
       GSLng.set_finalizer(self, :gsl_matrix_free, @ptr)
 
       @m,@n = m,n
-			if (block_given?) then self.map_index!(&Proc.new) end
+			if (block_given?) then self.map_index!(Proc.new) end
     end
 
     def initialize_copy(other) #:nodoc:
@@ -330,18 +330,18 @@ module GSLng
     end
 
     # Same as #each, but faster. The catch is that this method returns nothing.
-    def fast_each(&block) #:yield: elem
+    def fast_each(block = Proc.new) #:yield: elem
       GSLng.backend::gsl_matrix_each(self.ptr, block)
     end
 
 		# Efficient map! implementation
-		def map!(&block); GSLng.backend::gsl_matrix_map(@ptr, block); return self end
+		def map!(block = Proc.new); GSLng.backend::gsl_matrix_map(@ptr, block); return self end
 
 		# Alternate version of #map!, in this case the block receives the index as a parameter.
-		def map_index!(&block); GSLng.backend::gsl_matrix_map_index(@ptr, block); return self end
+		def map_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_index(@ptr, block); return self end
 
 		# See #map!. Returns a Matrix.
-		def map(&block); self.dup.map!(block) end
+		def map(block = Proc.new); self.dup.map!(block) end
 
     #--------------------- conversions -------------------------#
 

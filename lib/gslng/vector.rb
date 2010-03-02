@@ -26,7 +26,7 @@ module GSLng
       @size = n
       @ptr = (zero ? GSLng.backend::gsl_vector_calloc(n) : GSLng.backend::gsl_vector_alloc(n))
       GSLng.set_finalizer(self, :gsl_vector_free, @ptr)
-			if (block_given?) then self.map_index!(&Proc.new) end
+			if (block_given?) then self.map_index!(Proc.new) end
     end
 
     def initialize_copy(other) #:nodoc:
@@ -269,22 +269,25 @@ module GSLng
 		end
 
     # Same as #each, but faster. The catch is that this method returns nothing.
-    def fast_each(&block) #:yield: obj
+    def fast_each(block = Proc.new) #:yield: obj
       GSLng.backend::gsl_vector_each(self.ptr, block)
     end
 
-    def fast_each_with_index(&block) #:yield: obj,i
+    def fast_each_with_index(block = Proc.new) #:yield: obj,i
       GSLng.backend::gsl_vector_each_with_index(self.ptr, block)
     end
 
 		# Efficient map! implementation
-		def map!(&block); GSLng.backend::gsl_vector_map(self.ptr, block); return self end
+		def map!(block = Proc.new); GSLng.backend::gsl_vector_map(self.ptr, block); return self end
 
 		# Alternate version of #map!, in this case the block receives the index as a parameter.
-		def map_index!(&block); GSLng.backend::gsl_vector_map_index(self.ptr, block); return self end
+		def map_index!(block = Proc.new); GSLng.backend::gsl_vector_map_index(self.ptr, block); return self end
 
 		# See #map!. Returns a Vector.
-		def map(&block); self.dup.map!(block) end
+		def map(block = Proc.new); self.dup.map!(block) end
+
+    # Same as #map but returns an Array
+    def map_array(block = Proc.new) ary = []; self.fast_each {|elem| ary << block.call(elem)}; return ary end
 
     #--------------------- conversions -------------------------#
 
