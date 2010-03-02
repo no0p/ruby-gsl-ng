@@ -1,7 +1,2 @@
-- Matrix#column_vec_view y similares
-- Matrix#each_row_view / each_column_view (y lo mismo con vec)
-- Matrix::View#to_vec_view (cuando sea una fila/columna)
-- Vector::View#to_matrix crear un matrix view del vector
-
 Documentation:
 - usar cosas de Yard, tipo returns y eso?
