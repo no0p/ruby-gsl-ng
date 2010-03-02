@@ -103,3 +103,17 @@ extern "C" gsl_matrix* gsl_matrix_submatrix2(gsl_matrix* m_ptr, size_t x, size_t
   *matrix_view = view.matrix;
   return matrix_view;
 }
+
+extern "C" gsl_vector* gsl_matrix_row_view(gsl_matrix* m_ptr, size_t row, size_t offset, size_t size) {
+  gsl_vector_view view = gsl_matrix_subrow(m_ptr, row, offset, size);
+  gsl_vector* vector_view = gsl_vector_alloc(view.vector.size);
+  *vector_view = view.vector;
+  return vector_view;
+}
+
+extern "C" gsl_vector* gsl_matrix_column_view(gsl_matrix* m_ptr, size_t column, size_t offset, size_t size) {
+  gsl_vector_view view = gsl_matrix_subcolumn(m_ptr, column, offset, size);
+  gsl_vector* vector_view = gsl_vector_alloc(view.vector.size);
+  *vector_view = view.vector;
+  return vector_view;
+}

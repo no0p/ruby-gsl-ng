@@ -64,6 +64,8 @@ module GSLng
 
     # views
     attach_function :gsl_matrix_submatrix2, [ :pointer, :size_t, :size_t, :size_t, :size_t ], :pointer
+    attach_function :gsl_matrix_row_view, [ :pointer, :size_t, :size_t, :size_t ], :pointer
+    attach_function :gsl_matrix_column_view, [ :pointer, :size_t, :size_t, :size_t ], :pointer
 
     # BLAS interface
     enum :cblas_transpose_t, [ :no_transpose, 111, :transpose, :conjugate_transpose ]

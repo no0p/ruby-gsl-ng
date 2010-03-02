@@ -209,7 +209,10 @@ module GSLng
         k,m = size.divmod(stride)
         size = k + (m == 0 ? 0 : 1)
       end
-      View.new(self, offset, size, stride)
+
+      if (stride == 1) then ptr = GSLng.backend::gsl_vector_subvector2(self.ptr, offset, size)
+      else ptr = GSLng.backend::gsl_vector_subvector_with_stride2(self.ptr, offset, stride, size) end
+      View.new(ptr, self, offset, size)
     end
     alias_method :subvector_view, :view
 

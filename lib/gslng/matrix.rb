@@ -145,13 +145,27 @@ module GSLng
     def submatrix(*args); self.submatrix_view(*args).to_matrix end
 
     # Creates a Matrix::View for the i-th column
-    def column_view(i, offset = 0, size = nil); self.view(offset, i, (size or (self.m - offset)), 1) end
+    def column_view(i, offset = 0, size = nil); self.view(offset, i, (size or (@m - offset)), 1) end
 
     # Analogous to #submatrix
     def column(*args); self.column_view(*args).to_matrix end
 
     # Creates a Matrix::View for the i-th row
-    def row_view(i, offset = 0, size = nil); self.view(i, offset, 1, (size or (self.n - offset))) end
+    def row_view(i, offset = 0, size = nil); self.view(i, offset, 1, (size or (@n - offset))) end
+
+    # Same as #row_view, but returns a Vector::View
+    def row_vecview(i, offset = 0, size = nil)
+      size = (@n - offset) if size.nil?
+      ptr = GSLng.backend.gsl_matrix_row_view(self.ptr, i, offset, size)
+      Vector::View.new(ptr, self, offset, size)
+    end
+
+    # Same as #column_view, but returns a Vector::View
+    def column_vecview(i, offset = 0, size = nil)
+      size = (@m - offset) if size.nil?
+      ptr = GSLng.backend.gsl_matrix_column_view(self.ptr, i, offset, size)
+      Vector::View.new(ptr, self, offset, size)
+    end
 
     # Analogous to #submatrix
     def row(*args); self.row_view(*args).to_matrix end
@@ -335,10 +349,16 @@ module GSLng
     end
 
     # Yields the block for each row *view* (Matrix::View).
-    def each_row; self.rows.times do |i| yield(row_view(i)) end end
+    def each_row; self.rows.times {|i| yield(row_view(i))} end
+
+    # Same as #each_row, but yields Vector::View's
+    def each_vec_row; self.rows.times {|i| yield(row_vecview(i))} end
+
+    # Same as #each_column, but yields Vector::View's
+    def each_vec_column; self.columns.times {|i| yield(column_vecview(i))} end
 
     # Yields the block for each column *view* (Matrix::View).
-    def each_column; self.columns.times do |i| yield(column_view(i)) end end
+    def each_column; self.columns.times {|i| yield(column_view(i))} end
 
 		# Efficient map! implementation
 		def map!(block = Proc.new); GSLng.backend::gsl_matrix_map(@ptr, block); return self end

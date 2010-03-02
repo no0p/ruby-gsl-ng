@@ -55,6 +55,12 @@ class TestMatrix < Test::Unit::TestCase
     a = []
     m.each_column {|c| c.each {|e| a << e}}
     assert_equal([1,3,2,4,3,5], a)
+    a = []
+    m.each_vec_row {|r| r.each {|e| a << e}}
+    assert_equal([1,2,3,3,4,5], a)
+    a = []
+    m.each_vec_column {|c| c.each {|e| a << e}}
+    assert_equal([1,3,2,4,3,5], a)
   end
 
   def test_complex_get
