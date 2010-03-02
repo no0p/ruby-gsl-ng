@@ -41,6 +41,22 @@ class TestMatrix < Test::Unit::TestCase
     assert_equal(2, m[1,0])
 	end
 
+  def test_each
+    m = Matrix[[1,2,3],[3,4,5]]
+    a = []
+    m.each {|e| a << e}
+    assert_equal([1,2,3,3,4,5], a)
+    a = []
+    m.each {|e| a << e}
+    assert_equal([1,2,3,3,4,5], a)
+    a = []
+    m.each_row {|r| r.each {|e| a << e}}
+    assert_equal([1,2,3,3,4,5], a)
+    a = []
+    m.each_column {|c| c.each {|e| a << e}}
+    assert_equal([1,3,2,4,3,5], a)
+  end
+
   def test_complex_get
     m = Matrix[[1,2,3],[2,3,4]]
     assert_equal(m, m[:*,:*])

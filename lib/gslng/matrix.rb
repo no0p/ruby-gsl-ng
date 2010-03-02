@@ -334,6 +334,12 @@ module GSLng
       GSLng.backend::gsl_matrix_each(self.ptr, block)
     end
 
+    # Yields the block for each row *view* (Matrix::View).
+    def each_row; self.rows.times do |i| yield(row_view(i)) end end
+
+    # Yields the block for each column *view* (Matrix::View).
+    def each_column; self.columns.times do |i| yield(column_view(i)) end end
+
 		# Efficient map! implementation
 		def map!(block = Proc.new); GSLng.backend::gsl_matrix_map(@ptr, block); return self end
 
