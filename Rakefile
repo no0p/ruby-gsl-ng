@@ -1,13 +1,20 @@
 # -*- ruby -*-
-
 require 'rubygems'
-require 'hoe'
+require 'rake'
+require 'echoe'
+require 'yard'
 
-Hoe.spec('ruby-gsl-ng') do
-  developer('v01d', 'phreakuencies@gmail.com')
-  spec_extras[:extensions] = ["ext/extconf.rb"]
-  extra_deps << [ 'ffi', '>=0' ]
-  ENV['NODOT'] = '1'
+Echoe.new('ruby-gsl-ng') do |p|
+  p.author = 'v01d'
+  p.summary = "Ruby Object Oriented Graph LIbrary"
+  p.url = "http://github.com/v01d/roogli"
+  p.version = "0.2.1"
+  p.dependencies = ['yard', 'ffi']
+#  p.eval = proc { s.has_rdoc = 'yard' }
 end
 
-# vim: syntax=ruby
+YARD::Rake::YardocTask.new do |t|
+  t.files   = ['lib/**/*.rb']   # optional
+  t.options = ['--verbose','--no-private'] # optional
+end
+

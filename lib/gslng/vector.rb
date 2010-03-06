@@ -14,7 +14,7 @@ module GSLng
   class Vector
     include Enumerable
     
-    attr_reader :ptr	# :nodoc:
+    attr_reader :ptr	# @private
     attr_reader :size # Vector size
 
     #--------------------- constructors -------------------------#
