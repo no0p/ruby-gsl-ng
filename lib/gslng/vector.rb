@@ -219,6 +219,17 @@ module GSLng
     # Shorthand for #subvector_view(..).to_vector.
     def subvector(*args); subvector_view(*args).to_vector end
 
+    #------------ utility methods for 2D,3D and 4D vectors -----------#
+    def x; GSLng.backend::gsl_vector_get(self.ptr, 0) end
+    def y; GSLng.backend::gsl_vector_get(self.ptr, 1) end
+    def z; GSLng.backend::gsl_vector_get(self.ptr, 2) end
+    def w; GSLng.backend::gsl_vector_get(self.ptr, 3) end
+
+    def x=(v); GSLng.backend::gsl_vector_set(self.ptr, 0, v.to_f) end
+    def y=(v); GSLng.backend::gsl_vector_set(self.ptr, 1, v.to_f) end
+    def z=(v); GSLng.backend::gsl_vector_set(self.ptr, 2, v.to_f) end
+    def w=(v); GSLng.backend::gsl_vector_set(self.ptr, 3, v.to_f) end
+    
     #--------------------- predicate methods -------------------------#
 
     # if all elements are zero
