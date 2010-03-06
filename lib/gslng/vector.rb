@@ -149,6 +149,9 @@ module GSLng
     # Element-by-element division
     def /(other); self.dup.div!(other) end
 
+    # Invert sign on all elements
+    def -@; self.map!(&:-@) end
+
     #--------------------- other math -------------------------#
 
     # Dot product between self and other (uses BLAS's ddot)
