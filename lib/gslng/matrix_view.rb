@@ -10,7 +10,7 @@ module GSLng
       attr_reader :owner # The Matrix owning the data this View uses
 
       # Create a MatrixView of the sub-matrix starting at (x,y), of size (m,n)
-      def initialize(owner, x, y, m, n) #:nodoc:
+      def initialize(owner, x, y, m, n) # @private
         @owner = owner
         @m,@n = m,n
         @ptr = GSLng.backend::gsl_matrix_submatrix2(owner.ptr, x, y, m, n)
@@ -27,11 +27,11 @@ module GSLng
       alias_method :clone, :dup
       alias_method :to_matrix, :dup
 
-      def view  #:nodoc:
+      def view  # @private
         raise "Can't create a View from a View"
       end
 
-      def inspect #:nodoc:
+      def inspect # @private
         "#{self}:MatrixView"
       end
     end

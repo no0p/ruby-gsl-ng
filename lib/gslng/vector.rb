@@ -29,7 +29,7 @@ module GSLng
 			if (block_given?) then self.map_index!(Proc.new) end
     end
 
-    def initialize_copy(other) #:nodoc:
+    def initialize_copy(other) # @private
       ObjectSpace.undefine_finalizer(self) # TODO: ruby bug?
       
       @size = other.size
@@ -334,7 +334,7 @@ module GSLng
 			"[" + self.join(', ') + "]"
 		end
 
-    def inspect #:nodoc:
+    def inspect # @private
       "#{self}:Vector"
     end
 

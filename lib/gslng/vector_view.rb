@@ -9,7 +9,7 @@ module GSLng
     class View < Vector
       attr_reader :owner # The Vector owning the data this View uses
 
-      def initialize(ptr, owner, offset, size) # :nodoc:
+      def initialize(ptr, owner, offset, size) # @private
         @owner,@size,@ptr = owner,size,ptr
         GSLng.set_finalizer(self, :gsl_vector_free, @ptr)
       end
@@ -24,11 +24,11 @@ module GSLng
       alias_method :clone, :dup
       alias_method :to_vector, :dup
 
-      def view #:nodoc:
+      def view # @private
         raise "Can't create a View from a View"
       end
 
-      def inspect #:nodoc:
+      def inspect # @private
         "#{self}:VectorView"
       end
     end

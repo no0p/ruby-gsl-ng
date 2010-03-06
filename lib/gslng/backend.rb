@@ -9,7 +9,7 @@ module GSLng
   end
 
   # Returns the internal backend module
-	def GSLng.backend
+	def GSLng.backend # @private
     @backend
   end
 end

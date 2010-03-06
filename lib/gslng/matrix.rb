@@ -31,7 +31,7 @@ module GSLng
 			if (block_given?) then self.map_index!(Proc.new) end
     end
 
-    def initialize_copy(other) #:nodoc:
+    def initialize_copy(other) # @private
       ObjectSpace.undefine_finalizer(self) # TODO: ruby bug?
       @ptr = GSLng.backend::gsl_matrix_alloc(other.m, other.n)
       GSLng.set_finalizer(self, :gsl_matrix_free, @ptr)
@@ -394,7 +394,7 @@ module GSLng
       return s
 		end
 
-    def inspect #:nodoc:
+    def inspect # @private
       "#{self}:Matrix"
     end
 

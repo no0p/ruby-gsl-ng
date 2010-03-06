@@ -1,4 +1,4 @@
-module GSLng #:nodoc:
+module GSLng
 	backend.instance_eval do
     # All of this raises an exception when GSL registers an error
 		callback :error_handler_callback, [ :string, :string, :int, :int ], :void
