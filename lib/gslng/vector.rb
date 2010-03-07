@@ -49,8 +49,9 @@ module GSLng
 		end
 
 		# Creates a Vector from an Array (see #from_array) or a Range. For example:
-    #  Vector[1,2,3]
-    #  Vector[1..3]
+    # @example The following examples construct the same vector
+    #   Vector[1,2,3]
+    #   Vector[1..3]
 		def Vector.[](*args)
       array = (args.size == 1 && Range === args[0] ? args[0].to_a : args)
 			Vector.from_array(array)
@@ -155,6 +156,7 @@ module GSLng
     #--------------------- other math -------------------------#
 
     # Dot product between self and other (uses BLAS's ddot)
+    # @return [Float]
     def dot(other)
       out = FFI::Buffer.new(:double)
       GSLng.backend::gsl_blas_ddot(self.ptr, other.ptr, out)
@@ -190,7 +192,7 @@ module GSLng
 
 		# Access the i-th element (*NOTE*: throws exception if out-of-bounds).
 		# If _index_ is negative, it counts from the end (-1 is the last element).
-		# TODO: support ranges
+    # TODO: support ranges
     def [](index)
 			GSLng.backend::gsl_vector_get(self.ptr, (index < 0 ? @size + index : index))
     end
@@ -223,15 +225,24 @@ module GSLng
     def subvector(*args); subvector_view(*args).to_vector end
 
     #------------ utility methods for 2D,3D and 4D vectors -----------#
-    def x; GSLng.backend::gsl_vector_get(self.ptr, 0) end
-    def y; GSLng.backend::gsl_vector_get(self.ptr, 1) end
-    def z; GSLng.backend::gsl_vector_get(self.ptr, 2) end
-    def w; GSLng.backend::gsl_vector_get(self.ptr, 3) end
 
+    # Same as Vector#[0]
+    def x; GSLng.backend::gsl_vector_get(self.ptr, 0) end
+    # Same as Vector#[1]
+    def y; GSLng.backend::gsl_vector_get(self.ptr, 1) end
+    # Same as Vector#[2]
+    def z; GSLng.backend::gsl_vector_get(self.ptr, 2) end 
+    # Same as Vector#[3]
+    def w; GSLng.backend::gsl_vector_get(self.ptr, 3) end 
+
+    # Same as Vector#[0]=
     def x=(v); GSLng.backend::gsl_vector_set(self.ptr, 0, v.to_f) end
+    # Same as Vector#[1]=
     def y=(v); GSLng.backend::gsl_vector_set(self.ptr, 1, v.to_f) end
+    # Same as Vector#[2]=
     def z=(v); GSLng.backend::gsl_vector_set(self.ptr, 2, v.to_f) end
-    def w=(v); GSLng.backend::gsl_vector_set(self.ptr, 3, v.to_f) end
+    # Same as Vector#[3]=
+    def w=(v); GSLng.backend::gsl_vector_set(self.ptr, 3, v.to_f) end 
     
     #--------------------- predicate methods -------------------------#
 
@@ -263,7 +274,7 @@ module GSLng
       return [min[0].get_float64(0),max[0].get_float64(0)]
     end
 
-		# Same as #minmax, but returns the indices to the elements
+		# Same as {#minmax}, but returns the indices to the elements
     def minmax_index
       min = FFI::Buffer.new(:size_t)
       max = FFI::Buffer.new(:size_t)
@@ -280,35 +291,41 @@ module GSLng
 
     #--------------------- block handling -------------------------#
     
-    # Yields the block for each element in the Vector
-		def each # :yield: obj
+    # @yield [obj]
+		def each
 			@size.times {|i| yield(self[i])}
 		end
 
-    # Same as #each, but faster. The catch is that this method returns nothing.
-    def fast_each(block = Proc.new) #:yield: obj
+    # Same as {#each}, but faster. The catch is that this method returns nothing.
+    # @return [void]
+    # @yield [obj]
+    def fast_each(block = Proc.new) 
       GSLng.backend::gsl_vector_each(self.ptr, block)
     end
 
-    def fast_each_with_index(block = Proc.new) #:yield: obj,i
+    # @see #each
+    # @yield [obj,i]
+    def fast_each_with_index(block = Proc.new)
       GSLng.backend::gsl_vector_each_with_index(self.ptr, block)
     end
 
-		# Efficient map! implementation
+		# Efficient {#map!} implementation.
 		def map!(block = Proc.new); GSLng.backend::gsl_vector_map(self.ptr, block); return self end
 
-		# Alternate version of #map!, in this case the block receives the index as a parameter.
+		# Similar to {#map!}, but passes the index to the element instead.
+    # @yield [i]
 		def map_index!(block = Proc.new); GSLng.backend::gsl_vector_map_index(self.ptr, block); return self end
 
-		# See #map!. Returns a Vector.
-		def map(block = Proc.new); self.dup.map!(block) end
+    # @return [Vector]
+    def map(block = Proc.new); self.dup.map!(block) end
 
-    # Same as #map but returns an Array
+    # @return [Array]
     def map_array(block = Proc.new) ary = []; self.fast_each {|elem| ary << block.call(elem)}; return ary end
 
     #--------------------- conversions -------------------------#
 
-    # Same as Array#join
+    # @see Array#join
+    # @return [String]
 		def join(sep = $,)
 			s = ''
 			GSLng.backend::gsl_vector_each(self.ptr, lambda {|e| s += (s.empty?() ? e.to_s : "#{sep}#{e}")})
@@ -328,7 +345,8 @@ module GSLng
 			end
 		end
 
-    # Convert to String (same format as Array#to_s):
+    # @return [String] same format as Array#to_s
+    # @example
     #  Vector[1,2,3].to_s => "[1.0, 2.0, 3.0]"
 		def to_s
 			"[" + self.join(', ') + "]"
@@ -338,12 +356,13 @@ module GSLng
       "#{self}:Vector"
     end
 
-    # Convert to Array
+    # @return [Array]
 		def to_a
 			Array.new(@size) {|i| self[i]}
 		end
 
     # Create a row matrix from this vector
+    # @return [Matrix]
     def to_matrix
       m = Matrix.new(1, @size)
       GSLng.backend::gsl_matrix_set_row(m.ptr, 0, self.ptr)
@@ -352,6 +371,7 @@ module GSLng
     alias_method :to_row, :to_matrix
 
     # Create a column matrix from this vector
+    # @return [Matrix]
     def transpose
       m = Matrix.new(@size, 1)
       GSLng.backend::gsl_matrix_set_col(m.ptr, 0, self.ptr)

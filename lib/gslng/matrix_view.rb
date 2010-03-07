@@ -9,7 +9,7 @@ module GSLng
     class View < Matrix
       attr_reader :owner # The Matrix owning the data this View uses
 
-      # Create a MatrixView of the sub-matrix starting at (x,y), of size (m,n)
+      # Create a Matrix::View of the sub-matrix starting at (x,y), of size (m,n)
       def initialize(owner, x, y, m, n) # @private
         @owner = owner
         @m,@n = m,n
@@ -19,6 +19,7 @@ module GSLng
 
       # Returns a Matrix (*NOT* a View) copied from this view. In other words,
       # you'll get a Matrix which you can modify without modifying #owner elements.
+      # @return [Matrix]
       def dup
         matrix = Matrix.new(@m, @n)
         GSLng.backend::gsl_matrix_memcpy(matrix.ptr, @ptr)

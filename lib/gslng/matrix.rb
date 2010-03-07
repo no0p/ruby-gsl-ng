@@ -57,7 +57,8 @@ module GSLng
       end
 		end
 
-		# Create a Matrix from an Array of Arrays/Ranges (see #from_array). For example:
+		# Create a Matrix from an Array of Arrays/Ranges (see #from_array)
+    # @example
     #  Matrix[[1,2],[3,4]]
     #  Matrix[1,2,3]
     #  Matrix[[1..2],[5..10]]
@@ -87,9 +88,11 @@ module GSLng
 
     #--------------------- set/get -------------------------#
 
-		# Access the element (i,j), which means (row,column). *NOTE*: throws exception if out-of-bounds.
-		# If either i or j are :* or :all, it serves as a wildcard for that dimension, returning all rows or columns,
-		# respectively.
+    # Access the element (i,j), which means (row,column).
+    # If either i or j are :* or :all, it serves as a wildcard for that dimension, returning all rows or columns,
+    # respectively.
+    # @raise [RuntimeError] if out-of-bounds
+    # @return [Numeric,Matrix] the element or a sub-matrix
     def [](i, j = :*)
 			if (Symbol === i && Symbol === j) then return self
 			elsif (Symbol === i)
@@ -105,9 +108,10 @@ module GSLng
 			end
 		end
 
-		# Set the element (i,j), which means (row,column). *NOTE*: throws exception if out-of-bounds.
-		# Same indexing options as #[].
-    # _value_ can be a single Numeric, a Vector or a Matrix, depending on the indexing.
+    # Set the element (i,j), which means (row,column).
+    # @param [Numeric,Vector,Matrix] value depends on indexing
+    # @raise [RuntimeError] if out-of-bounds
+    # @see #[]
     def []=(i, j, value)
 			if (Symbol === i && Symbol === j) then
 				if (Numeric === value) then self.fill!(value)
@@ -136,24 +140,34 @@ module GSLng
 
     # Create a Matrix::View from this Matrix.
     # If either _m_ or _n_ are nil, they're computed from _x_, _y_ and the Matrix's #size
+    # @return [Matrix::View]
     def view(x = 0, y = 0, m = nil, n = nil)
       View.new(self, x, y, (m or @m - x), (n or @n - y))
     end
     alias_method :submatrix_view, :view
     
     # Shorthand for submatrix_view(..).to_matrix.
+    # @return [Matrix]
     def submatrix(*args); self.submatrix_view(*args).to_matrix end
 
     # Creates a Matrix::View for the i-th column
+    # @return [Matrix::View]
     def column_view(i, offset = 0, size = nil); self.view(offset, i, (size or (@m - offset)), 1) end
 
     # Analogous to #submatrix
+    # @return [Matrix]
     def column(*args); self.column_view(*args).to_matrix end
 
     # Creates a Matrix::View for the i-th row
+    # @return [Matrix::View]
     def row_view(i, offset = 0, size = nil); self.view(i, offset, 1, (size or (@n - offset))) end
 
+    # Analogous to #submatrix
+    # @return [Matrix]
+    def row(*args); self.row_view(*args).to_matrix end
+
     # Same as #row_view, but returns a Vector::View
+    # @return [Vector::View]
     def row_vecview(i, offset = 0, size = nil)
       size = (@n - offset) if size.nil?
       ptr = GSLng.backend.gsl_matrix_row_view(self.ptr, i, offset, size)
@@ -161,15 +175,14 @@ module GSLng
     end
 
     # Same as #column_view, but returns a Vector::View
+    # @return [Vector::View]
     def column_vecview(i, offset = 0, size = nil)
       size = (@m - offset) if size.nil?
       ptr = GSLng.backend.gsl_matrix_column_view(self.ptr, i, offset, size)
       Vector::View.new(ptr, self, offset, size)
     end
 
-    # Analogous to #submatrix
-    def row(*args); self.row_view(*args).to_matrix end
-
+    
     #--------------------- operators -------------------------#
 
     # Add other to self

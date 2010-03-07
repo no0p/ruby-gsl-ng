@@ -14,7 +14,6 @@ Echoe.new('ruby-gsl-ng') do |p|
 end
 
 YARD::Rake::YardocTask.new do |t|
-  t.files   = ['lib/**/*.rb']   # optional
-  t.options = ['--verbose','--no-private'] # optional
+  t.options = ['--verbose','--no-private']
 end
 
