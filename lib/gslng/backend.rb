@@ -1,15 +1,15 @@
 require 'ffi'
 
 module GSLng
-	# Anonymous module: avoids exposing this internal module when doing "include GSLng" at the top-level.
-	# If ruby had "private" modules I wouldn't have to do this.
+  # Anonymous module: avoids exposing this internal module when doing "include GSLng" at the top-level.
+  # If ruby had "private" modules I wouldn't have to do this.
   @backend = Module.new do
     extend FFI::Library
     ffi_lib(FFI::CURRENT_PROCESS)
   end
 
   # Returns the internal backend module
-	def GSLng.backend # @private
+  def GSLng.backend # @private
     @backend
   end
 end

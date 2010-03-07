@@ -1,9 +1,9 @@
 module GSLng
-	backend.instance_eval do
-		# memory handling
-		attach_function :gsl_matrix_alloc, [ :size_t, :size_t ], :pointer
-		attach_function :gsl_matrix_calloc, [ :size_t, :size_t ], :pointer
-		attach_function :gsl_matrix_free, [ :pointer ], :void
+  backend.instance_eval do
+    # memory handling
+    attach_function :gsl_matrix_alloc, [ :size_t, :size_t ], :pointer
+    attach_function :gsl_matrix_calloc, [ :size_t, :size_t ], :pointer
+    attach_function :gsl_matrix_free, [ :pointer ], :void
 
     # initializing
     attach_function :gsl_matrix_set_all, [ :pointer, :double ], :void
@@ -21,13 +21,13 @@ module GSLng
     attach_function :gsl_matrix_scale, [ :pointer, :double ], :int
     attach_function :gsl_matrix_add_constant, [ :pointer, :double ], :int
 
-		# copy rows/columns into
-		attach_function :gsl_matrix_get_row, [ :pointer, :pointer, :size_t ], :int
-		attach_function :gsl_matrix_get_col, [ :pointer, :pointer, :size_t ], :int
-		attach_function :gsl_matrix_set_row, [ :pointer, :size_t, :pointer ], :int
-		attach_function :gsl_matrix_set_col, [ :pointer, :size_t, :pointer ], :int
+    # copy rows/columns into
+    attach_function :gsl_matrix_get_row, [ :pointer, :pointer, :size_t ], :int
+    attach_function :gsl_matrix_get_col, [ :pointer, :pointer, :size_t ], :int
+    attach_function :gsl_matrix_set_row, [ :pointer, :size_t, :pointer ], :int
+    attach_function :gsl_matrix_set_col, [ :pointer, :size_t, :pointer ], :int
 
-		# element access
+    # element access
     attach_function :gsl_matrix_get, [ :pointer, :size_t, :size_t ], :double
     attach_function :gsl_matrix_set, [ :pointer, :size_t, :size_t, :double ], :void
     
@@ -51,16 +51,16 @@ module GSLng
     attach_function :gsl_matrix_swap_rowcol, [ :pointer, :size_t, :size_t ], :int
     attach_function :gsl_matrix_transpose_memcpy, [ :pointer, :pointer ], :int
     attach_function :gsl_matrix_transpose, [ :pointer ], :int
-		
+    
     # From local extension
-		callback :gsl_matrix_callback, [ :double ], :double
-		attach_function :gsl_matrix_map, [ :pointer, :gsl_matrix_callback ], :void
+    callback :gsl_matrix_callback, [ :double ], :double
+    attach_function :gsl_matrix_map, [ :pointer, :gsl_matrix_callback ], :void
 
-		callback :gsl_matrix_index_callback, [ :size_t, :size_t ], :double
-		attach_function :gsl_matrix_map_index, [ :pointer, :gsl_matrix_index_callback ], :void
+    callback :gsl_matrix_index_callback, [ :size_t, :size_t ], :double
+    attach_function :gsl_matrix_map_index, [ :pointer, :gsl_matrix_index_callback ], :void
 
-		callback :gsl_matrix_each_callback, [ :double ], :void
-		attach_function :gsl_matrix_each, [ :pointer, :gsl_matrix_each_callback ], :void
+    callback :gsl_matrix_each_callback, [ :double ], :void
+    attach_function :gsl_matrix_each, [ :pointer, :gsl_matrix_each_callback ], :void
 
     # views
     attach_function :gsl_matrix_submatrix2, [ :pointer, :size_t, :size_t, :size_t, :size_t ], :pointer
@@ -71,5 +71,5 @@ module GSLng
     enum :cblas_transpose_t, [ :no_transpose, 111, :transpose, :conjugate_transpose ]
     attach_function :gsl_blas_dgemv, [ :cblas_transpose_t, :double, :pointer, :pointer, :double, :pointer ], :int
     attach_function :gsl_blas_dgemm, [ :cblas_transpose_t, :cblas_transpose_t, :double, :pointer, :pointer, :double, :pointer ], :int
-	end
+  end
 end

@@ -1,6 +1,6 @@
 module GSLng
-	backend.instance_eval do
-		# memory handling
+  backend.instance_eval do
+    # memory handling
     attach_function :gsl_vector_alloc, [ :size_t ], :pointer
     attach_function :gsl_vector_calloc, [ :size_t ], :pointer
     attach_function :gsl_vector_free, [ :pointer ], :void
@@ -56,20 +56,20 @@ module GSLng
     attach_function :gsl_vector_subvector2, [ :pointer, :size_t, :size_t ], :pointer
     attach_function :gsl_vector_subvector_with_stride2, [ :pointer, :size_t, :size_t, :size_t ], :pointer
 
-		# From local extension
-		callback :gsl_vector_callback, [ :double ], :double
-		attach_function :gsl_vector_map, [ :pointer, :gsl_vector_callback ], :void
+    # From local extension
+    callback :gsl_vector_callback, [ :double ], :double
+    attach_function :gsl_vector_map, [ :pointer, :gsl_vector_callback ], :void
 
-		callback :gsl_vector_index_callback, [ :size_t ], :double
-		attach_function :gsl_vector_map_index, [ :pointer, :gsl_vector_index_callback ], :void
+    callback :gsl_vector_index_callback, [ :size_t ], :double
+    attach_function :gsl_vector_map_index, [ :pointer, :gsl_vector_index_callback ], :void
 
-		callback :gsl_vector_each_callback, [ :double ], :void
-		attach_function :gsl_vector_each, [ :pointer, :gsl_vector_each_callback ], :void
+    callback :gsl_vector_each_callback, [ :double ], :void
+    attach_function :gsl_vector_each, [ :pointer, :gsl_vector_each_callback ], :void
 
-		callback :gsl_vector_each_with_index_callback, [ :double, :size_t ], :void
-		attach_function :gsl_vector_each_with_index, [ :pointer, :gsl_vector_each_with_index_callback ], :void
+    callback :gsl_vector_each_with_index_callback, [ :double, :size_t ], :void
+    attach_function :gsl_vector_each_with_index, [ :pointer, :gsl_vector_each_with_index_callback ], :void
 
-		# Sorting
-		attach_function :gsl_sort_vector, [ :pointer ], :void
-	end
+    # Sorting
+    attach_function :gsl_sort_vector, [ :pointer ], :void
+  end
 end
