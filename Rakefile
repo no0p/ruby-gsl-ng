@@ -14,6 +14,6 @@ Echoe.new('ruby-gsl-ng') do |p|
 end
 
 YARD::Rake::YardocTask.new do |t|
-  t.options = ['--verbose','--no-private']
+  t.options = ['--verbose','--no-private','--hide-void']
 end
 

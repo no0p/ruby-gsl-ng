@@ -7,8 +7,7 @@ module GSLng
     # But note that modifying elements of a View will modify the elements of the original Vector/Matrix.
     #
     class View < Vector
-      # The Vector owning the data this View uses
-      # @return [Vector,Matrix]
+      # @return [Vector,Matrix] The owner of the data this view accesses
       attr_reader :owner 
 
       def initialize(ptr, owner, offset, size) # @private

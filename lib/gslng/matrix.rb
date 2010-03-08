@@ -2,27 +2,28 @@ module GSLng
   # A fixed-size MxN matrix.
   #
   # =Notes
-  # See Vector notes. Everything applies with the following differences/additions:
-  # * The * operator performs actual matrix-matrix and matrix-vector products. To perform element-by-element
-  #   multiplication use the ^ operator (or multiply method) instead. The rest of the operators work element-by-element.
-  # * Operators can handle matrix-matrix, matrix-vector and matrix-scalar (also in reversed order). See #coerce.
-  # * The [] and []= operators can handle a "wildcard" value for any dimension, just like MATLAB's colon (:).
+  # See Vector notes. Everything applies with the following *differences/additions*:
+  # * The {#*} operator performs actual matrix-matrix and matrix-vector products. To perform element-by-element
+  #   multiplication use the {#^} operator (or {#multiply} method) instead. The rest of the operators work element-by-element.
+  # * Operators can handle matrix-matrix, matrix-vector and matrix-scalar (also in reversed order). See {#coerce}.
+  # * The {#[]} and {#[]=} operators can handle a "wildcard" value for any dimension, just like MATLAB's colon (:).
   class Matrix
-    attr_reader :m, :n, :ptr
+    attr_reader :m, :n    
+    attr_reader :ptr # @private
 
     alias_method :height, :m
     alias_method :width, :n
     alias_method :rows, :m
     alias_method :columns, :n
 
-    # Returns [ #rows, #columns ]
+    # Shorthand for [{#rows},{#columns}]
     def size; [ @m, @n ] end
 
     #--------------------- constructors -------------------------#
 
     # Create a Matrix of m-by-n (rows and columns). If zero is true, the Matrix is initialized with zeros.
     # Otherwise, the Matrix will contain garbage.
-    # You can optionally pass a block, in which case #map_index! will be called with it (i.e.: it works like Array.new).
+    # You can optionally pass a block, in which case {#map_index!} will be called with it (i.e.: it works like Array.new).
     def initialize(m, n, zero = false)
       @ptr = (zero ? GSLng.backend::gsl_matrix_calloc(m, n) : GSLng.backend::gsl_matrix_alloc(m, n))
       GSLng.set_finalizer(self, :gsl_matrix_free, @ptr)
@@ -57,7 +58,8 @@ module GSLng
       end
     end
 
-    # Create a Matrix from an Array of Arrays/Ranges (see #from_array)
+    # Create a Matrix from an Array of Arrays/Ranges
+    # @see Matrix::from_array
     # @example
     #  Matrix[[1,2],[3,4]]
     #  Matrix[1,2,3]
@@ -67,7 +69,7 @@ module GSLng
     end
     
     # Generates a Matrix of m by n, of random numbers between 0 and 1.
-    # NOTE: This simply uses Kernel::rand
+    # NOTE: This simply uses {Kernel::rand}
     def Matrix.random(m, n)
       Matrix.new(m, n).map!{|x| Kernel::rand}
     end
@@ -138,35 +140,35 @@ module GSLng
 
     #--------------------- view -------------------------#
 
-    # Create a Matrix::View from this Matrix.
-    # If either _m_ or _n_ are nil, they're computed from _x_, _y_ and the Matrix's #size
+    # Create a {Matrix::View} from this Matrix.
+    # If either _m_ or _n_ are nil, they're computed from _x_, _y_ and the Matrix's {#size}
     # @return [Matrix::View]
     def view(x = 0, y = 0, m = nil, n = nil)
       View.new(self, x, y, (m or @m - x), (n or @n - y))
     end
     alias_method :submatrix_view, :view
     
-    # Shorthand for submatrix_view(..).to_matrix.
+    # Shorthand for #submatrix_view(..).to_matrix.
     # @return [Matrix]
     def submatrix(*args); self.submatrix_view(*args).to_matrix end
 
-    # Creates a Matrix::View for the i-th column
+    # Creates a {Matrix::View} for the i-th column
     # @return [Matrix::View]
     def column_view(i, offset = 0, size = nil); self.view(offset, i, (size or (@m - offset)), 1) end
 
-    # Analogous to #submatrix
+    # Analogous to {#submatrix}
     # @return [Matrix]
     def column(*args); self.column_view(*args).to_matrix end
 
-    # Creates a Matrix::View for the i-th row
+    # Creates a {Matrix::View} for the i-th row
     # @return [Matrix::View]
     def row_view(i, offset = 0, size = nil); self.view(i, offset, 1, (size or (@n - offset))) end
 
-    # Analogous to #submatrix
+    # Analogous to {#submatrix}
     # @return [Matrix]
     def row(*args); self.row_view(*args).to_matrix end
 
-    # Same as #row_view, but returns a Vector::View
+    # Same as {#row_view}, but returns a {Vector::View}
     # @return [Vector::View]
     def row_vecview(i, offset = 0, size = nil)
       size = (@n - offset) if size.nil?
@@ -174,7 +176,7 @@ module GSLng
       Vector::View.new(ptr, self, offset, size)
     end
 
-    # Same as #column_view, but returns a Vector::View
+    # Same as {#column_view}, but returns a {Vector::View}
     # @return [Vector::View]
     def column_vecview(i, offset = 0, size = nil)
       size = (@m - offset) if size.nil?
@@ -186,6 +188,7 @@ module GSLng
     #--------------------- operators -------------------------#
 
     # Add other to self
+    # @return [Matrix] self
     def add!(other)
       case other
       when Numeric; GSLng.backend::gsl_matrix_add_constant(self.ptr, other.to_f)
@@ -198,6 +201,7 @@ module GSLng
     end
 
     # Substract other from self
+    # @return [Matrix] self    
     def substract!(other)
       case other
       when Numeric; GSLng.backend::gsl_matrix_add_constant(self.ptr, -other.to_f)
@@ -211,6 +215,7 @@ module GSLng
     alias_method :sub!, :substract!
 
     # Multiply (element-by-element) other with self
+    # @return [Matrix] self    
     def multiply!(other)
       case other
       when Numeric; GSLng.backend::gsl_matrix_scale(self.ptr, other.to_f)
@@ -224,6 +229,7 @@ module GSLng
     alias_method :mul!, :multiply!
 
     # Divide (element-by-element) self by other
+    # @return [Matrix] self    
     def divide!(other)
       case other
       when Numeric; GSLng.backend::gsl_matrix_scale(self.ptr, 1.0 / other)
@@ -250,7 +256,7 @@ module GSLng
     alias_method :multiply, :^
     alias_method :mul, :^
 
-    # Matrix Product. self#n should equal other#m (or other#size, if a Vector).
+    # Matrix Product. self.n should equal other.m (or other.size, if a Vector).
     # TODO: some cases could be optimized when doing Matrix-Matrix, by using dgemv
     def *(other)
       case other
@@ -278,7 +284,10 @@ module GSLng
     # Returns the transpose of self, in a new matrix
     def transpose; matrix = Matrix.new(@n, @m); GSLng.backend::gsl_matrix_transpose_memcpy(matrix.ptr, self.ptr); return matrix end
 
+    # Swap the i-th and j-th columnos
     def swap_columns(i, j); GSLng.backend::gsl_matrix_swap_columns(self.ptr, i, j); return self end
+    
+    # Swap the i-th and j-th rows
     def swap_rows(i, j); GSLng.backend::gsl_matrix_swap_rows(self.ptr, i, j); return self end
     
     # Swap the i-th row with the j-th column. The Matrix must be square.
@@ -309,7 +318,7 @@ module GSLng
     # Minimum element of the Matrix
     def min; GSLng.backend::gsl_matrix_min(self.ptr) end
 
-    # Same as Array#minmax
+    # Same as {Array#minmax}
     def minmax
       min = FFI::Buffer.new(:double)
       max = FFI::Buffer.new(:double)
@@ -317,7 +326,7 @@ module GSLng
       return [min[0].get_float64(0),max[0].get_float64(0)]
     end
 
-    # Same as #minmax, but returns the indices to the i-th and j-th min, and i-th and j-th max.
+    # Same as {#minmax}, but returns the indices to the i-th and j-th min, and i-th and j-th max.
     def minmax_index
       i_min = FFI::Buffer.new(:size_t)
       j_min = FFI::Buffer.new(:size_t)
@@ -328,7 +337,7 @@ module GSLng
       return [i_min[0].get_ulong(0),j_min[0].get_ulong(0),i_max[0].get_ulong(0),j_max[0].get_ulong(0)]
     end
 
-    # Same as #min, but returns the indices to the i-th and j-th minimum elements
+    # Same as {#min}, but returns the indices to the i-th and j-th minimum elements
     def min_index
       i_min = FFI::Buffer.new(:size_t)
       j_min = FFI::Buffer.new(:size_t)
@@ -336,7 +345,7 @@ module GSLng
       return [i_min[0].get_ulong(0), j_min[0].get_ulong(0)]
     end
 
-    # Same as #max, but returns the indices to the i-th and j-th maximum elements
+    # Same as {#max}, but returns the indices to the i-th and j-th maximum elements
     def max_index
       i_max = FFI::Buffer.new(:size_t)
       j_max = FFI::Buffer.new(:size_t)
@@ -347,44 +356,57 @@ module GSLng
     #--------------------- block handling -------------------------#
 
     # Yields the specified block for each element going row-by-row
-    def each # :yields: elem
+    # @yield [elem]
+    def each 
       @m.times {|i| @n.times {|j| yield(self[i,j]) } }
     end
 
     # Yields the specified block for each element going row-by-row
-    def each_with_index # :yields: elem, i, j
+    # @yield [elem, i, j]
+    def each_with_index 
       @m.times {|i| @n.times {|j| yield(self[i,j], i, j) } }
     end
 
-    # Same as #each, but faster. The catch is that this method returns nothing.
-    def fast_each(block = Proc.new) #:yield: elem
+    # Same as {#each}, but faster. The catch is that this method returns nothing.
+    # @yield [elem]
+    # @return [void]
+    def fast_each(block = Proc.new) 
       GSLng.backend::gsl_matrix_each(self.ptr, block)
     end
 
-    # Yields the block for each row *view* (Matrix::View).
+    # Yields the block for each row *view* ({Matrix::View}).
+    # @yield [view]
     def each_row; self.rows.times {|i| yield(row_view(i))} end
 
-    # Same as #each_row, but yields Vector::View's
+    # Same as {#each_row}, but yields {Vector::View}'s
+    # @yield [vector_view]    
     def each_vec_row; self.rows.times {|i| yield(row_vecview(i))} end
 
-    # Same as #each_column, but yields Vector::View's
+    # Same as #each_column, but yields {Vector::View}'s
+    # @yield [vector_view]    
     def each_vec_column; self.columns.times {|i| yield(column_vecview(i))} end
 
-    # Yields the block for each column *view* (Matrix::View).
+    # Yields the block for each column *view* ({Matrix::View}).
+    # @yield [view]    
     def each_column; self.columns.times {|i| yield(column_view(i))} end
 
-    # Efficient map! implementation
+    # Efficient {#map!} implementation
+    # @yield [elem]
     def map!(block = Proc.new); GSLng.backend::gsl_matrix_map(@ptr, block); return self end
 
-    # Alternate version of #map!, in this case the block receives the index as a parameter.
+    # Alternate version of {#map!}, in this case the block receives the index as a parameter.
+    # @yield [i]    
     def map_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_index(@ptr, block); return self end
 
-    # See #map!. Returns a Matrix.
+    # @see #map!
+    # @return [Matrix]
+    # @yield [elem]
     def map(block = Proc.new); self.dup.map!(block) end
 
     #--------------------- conversions -------------------------#
 
-    # Same as Array#join, for example:
+    # Same as {Array#join}
+    # @example
     #  Matrix[[1,2],[2,3]].join => "1.0 2.0 2.0 3.0"
     def join(sep = $,)
       s = ''
@@ -392,7 +414,8 @@ module GSLng
       return s
     end
 
-    # Converts the matrix to a String, separating each element with a space and each row with a ';' and a newline:
+    # Converts the matrix to a String, separating each element with a space and each row with a ';' and a newline.
+    # @example
     #  Matrix[[1,2],[2,3]] => "[1.0 2.0;\n 2.0 3.0]"
     def to_s
       s = '['
@@ -413,7 +436,7 @@ module GSLng
 
     # Coerces _other_ to be of Matrix class.
     # If _other_ is a scalar (Numeric) a Matrix filled with _other_ values is created.
-    # Vectors are coerced using Vector#to_matrix (which results in a row matrix).
+    # Vectors are coerced using {Vector#to_matrix} (which results in a row matrix).
     def coerce(other)
       case other
       when Matrix
