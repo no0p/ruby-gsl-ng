@@ -13,9 +13,9 @@ module GSLng
   #
   class Vector
     include Enumerable
-    
+        
+    attr_reader :size
     attr_reader :ptr  # @private
-    attr_reader :size # Vector size
 
     #--------------------- constructors -------------------------#
     
@@ -50,7 +50,7 @@ module GSLng
 
     # Creates a Vector from an Array or a Range
     # @see Vector::from_array    
-    # @example The following examples construct the same vector
+    # @example
     #   Vector[1,2,3]
     #   Vector[1..3]
     def Vector.[](*args)
@@ -108,7 +108,7 @@ module GSLng
     alias_method :sub!, :substract!
     
     # Multiply (element-by-element) other with self
-    # @return [Vector] self    
+    # @return [Vector] self
     def multiply!(other)
       case other
       when Numeric; GSLng.backend::gsl_blas_dscal(other.to_f, self.ptr)
@@ -122,7 +122,7 @@ module GSLng
     alias_method :mul!, :multiply!
     
     # Divide (element-by-element) self by other
-    # @return [Vector] self    
+    # @return [Vector] self
     def divide!(other)
       case other
       when Numeric; GSLng.backend::gsl_blas_dscal(1.0 / other, self.ptr)
@@ -142,6 +142,9 @@ module GSLng
     def -(other); self.dup.sub!(other) end
 
     # Element-by-element product
+    # @example
+    #  Vector[1,2,3] * 2 => [2.0, 4.0, 6.0]:Vector
+    #  Vector[1,2,3] * Vector[0,1,2] => [0.0, 2.0, 6.0]:Vector    
     def *(other)
       case other
       when Numeric; self.dup.mul!(other)
@@ -162,6 +165,8 @@ module GSLng
 
     # Dot product between self and other (uses BLAS's ddot)
     # @return [Float]
+    # @example
+    #  Vector[1,2,3] ^ Vector[0,1,2] => 8.0
     def dot(other)
       out = FFI::Buffer.new(:double)
       GSLng.backend::gsl_blas_ddot(self.ptr, other.ptr, out)
@@ -195,16 +200,18 @@ module GSLng
 
     #--------------------- set/get -------------------------#
 
-    # Access the i-th element (*NOTE*: throws exception if out-of-bounds).
+    # Access the i-th element.
     # If _index_ is negative, it counts from the end (-1 is the last element).
-    # TODO: support ranges
+    # @raise [RuntimeError] if out-of-bounds
+    # @todo support ranges    
     def [](index)
       GSLng.backend::gsl_vector_get(self.ptr, (index < 0 ? @size + index : index))
     end
 
-    # Set the i-th element (*NOTE*: throws exception if out-of-bounds).
+    # Set the i-th element.
     # If _index_ is negative, it counts from the end (-1 is the last element).
-    # TODO: support ranges
+    # @raise [RuntimeError] if out-of-bounds
+    # @todo support ranges    
     def []=(index, value)
       GSLng.backend::gsl_vector_set(self.ptr, (index < 0 ? @size + index : index), value.to_f)
     end
@@ -339,8 +346,9 @@ module GSLng
       return s
     end
 
-    # Coerces _other_ to be a Vector. If _other_ is a scalar (a Numeric) a vector of the same size as self
-    # will be created with all values set to _other_.
+    # Coerces _other_ to be a Vector. 
+    # @example
+    #  Vector[1,2].coerce(5) => [[5.0, 5.0]:Vector, [1.0, 2.0]:Vector]
     def coerce(other)
       case other
       when Vector

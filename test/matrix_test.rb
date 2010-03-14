@@ -66,11 +66,11 @@ class TestMatrix < Test::Unit::TestCase
   def test_complex_get
     m = Matrix[[1,2,3],[2,3,4]]
     assert_equal(m, m[:*,:*])
-    assert_equal(Vector[1, 2, 3], m[0,:*])
-    assert_equal(Vector[2, 3, 4], m[1,:*])
-    assert_equal(Vector[1, 2], m[:*,0])
-    assert_equal(Vector[2, 3], m[:*,1])
-    assert_equal(Vector[3, 4], m[:*,2])
+    assert_equal(Matrix[1, 2, 3], m[0,:*])
+    assert_equal(Matrix[2, 3, 4], m[1,:*])
+    assert_equal(Matrix[1, 2], m[:*,0])
+    assert_equal(Matrix[2, 3], m[:*,1])
+    assert_equal(Matrix[3, 4], m[:*,2])
   end
 
   def test_complex_set

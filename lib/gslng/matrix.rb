@@ -45,9 +45,7 @@ module GSLng
     def Matrix.zero(m, n); Matrix.new(m, n, true) end
 
     # Create a matrix from an Array
-    # If array is unidimensional, a row Matrix is created. If it is multidimensional, each sub-array
-    # corresponds to a row of the resulting Matrix. Also, _array_ can be an Array of Ranges, in which case
-    # each Range will correspond to a row.
+    # @see Matrix::[]
     def Matrix.from_array(array)
       if (array.empty?) then raise "Can't create empty matrix" end
 
@@ -58,12 +56,12 @@ module GSLng
       end
     end
 
-    # Create a Matrix from an Array of Arrays/Ranges
-    # @see Matrix::from_array
+    # Create a Matrix from an Array/Array of Arrays/Range
     # @example
-    #  Matrix[[1,2],[3,4]]
-    #  Matrix[1,2,3]
-    #  Matrix[[1..2],[5..10]]
+    #  Matrix[[1,2],[3,4]] => [1.0 2.0; 3.0 4.0]:Matrix
+    #  Matrix[1,2,3] => [1.0 2.0 3.0]:Matrix
+    #  Matrix[[1..3],[5..7]] => [1.0 2.0 3.0; 5.0 6.0 7.0]:Matrix
+    # @see Matrix::from_array    
     def Matrix.[](*args)
       Matrix.from_array(args)
     end
@@ -91,20 +89,24 @@ module GSLng
     #--------------------- set/get -------------------------#
 
     # Access the element (i,j), which means (row,column).
-    # If either i or j are :* or :all, it serves as a wildcard for that dimension, returning all rows or columns,
-    # respectively.
+    # Symbols :* or :all can be used as wildcards for both dimensions.
+    # @example If +m = Matrix[[1,2],[3,4]]+
+    #  m[0,0] => 1.0
+    #  m[0,:*] => [1.0, 2.0]:Matrix
+    #  m[:*,0] => [1.0, 3.0]:Matrix
+    #  m[:*,:*] => [1.0, 2.0; 3.0, 4.0]:Matrix
     # @raise [RuntimeError] if out-of-bounds
-    # @return [Numeric,Matrix] the element or a sub-matrix
+    # @return [Numeric,Matrix] the element/sub-matrix
     def [](i, j = :*)
       if (Symbol === i && Symbol === j) then return self
       elsif (Symbol === i)
         col = Vector.new(@m)
         GSLng.backend::gsl_matrix_get_col(col.ptr, @ptr, j)
-        return col
+        return col.to_matrix
       elsif (Symbol === j)
         row = Vector.new(@n)
         GSLng.backend::gsl_matrix_get_row(row.ptr, @ptr, i)
-        return row
+        return row.to_matrix
       else
         GSLng.backend::gsl_matrix_get(@ptr, i, j)
       end
@@ -257,7 +259,9 @@ module GSLng
     alias_method :mul, :^
 
     # Matrix Product. self.n should equal other.m (or other.size, if a Vector).
-    # TODO: some cases could be optimized when doing Matrix-Matrix, by using dgemv
+    # @example
+    #  Matrix[[1,2],[2,3]] * 2 => [2.0 4.0; 4.0 6.0]:Matrix
+    # @todo some cases could be optimized when doing Matrix-Matrix, by using dgemv
     def *(other)
       case other
       when Numeric
