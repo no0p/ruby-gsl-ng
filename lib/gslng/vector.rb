@@ -198,6 +198,29 @@ module GSLng
     # Copy other's values into self
     def copy(other); GSLng.backend::gsl_vector_memcpy(self.ptr, other.ptr); return self end
 
+    # Wraps self into the interval [min,max) by adding or substracting (max-min) to each component as necessary.
+    # Note that wrapping is done only with a single addition/substraction.
+    # @param [Vector,Numeric] min 
+    # @param [Vector,Numeric] max
+    # @return [Vector] a vector of values -1, 1 or 0, if (max-min) was substracted, added to the coordinate,
+    # or not modified, respectively.
+    # @example Assuming that +v = Vector[-8,2,8]+
+    #  v.wrap(0, 5) => [1.0 0.0 -1.0]:Vector
+    #  v => [-3.0 2.0 3.0]:Vector
+    def wrap!(min, max)
+      min,other = self.coerce(min)
+      max,other = self.coerce(max)
+      delta = Vector.new(self.size)
+      range = max - min
+
+      self.map_index! do |i|
+        if (self[i] < min[i]) then delta[i] = 1; self[i] + range[i]
+        elsif (self[i] >= max[i]) then delta[i] = -1; self[i] - range[i]
+        else delta[i] = 0; self[i] end
+      end
+      return delta
+    end
+
     #--------------------- set/get -------------------------#
 
     # Access the i-th element.
@@ -327,6 +350,11 @@ module GSLng
     # Similar to {#map!}, but passes the index to the element instead.
     # @yield [i]
     def map_index!(block = Proc.new); GSLng.backend::gsl_vector_map_index(self.ptr, block); return self end
+
+    # @return [Vector]
+    # @see map_index!
+    # @yield [i]
+    def map_index(block = Proc.new); self.dup.map_index!(block) end
 
     # @return [Vector]
     # @yield [elem]
