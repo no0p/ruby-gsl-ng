@@ -293,6 +293,18 @@ module GSLng
     # if all elements are non-negative (>=0)
     def nonnegative?; GSLng.backend::gsl_vector_isnonneg(self.ptr) == 1 ? true : false end
 
+    # If each element of self is less than other's elements
+    def <(other); (other - self).positive? end
+
+    # If each element of self is greater than other's elements
+    def >(other); (other - self).negative? end
+
+    # If each element of self is less-or-equal than other's elements
+    def <=(other); (other - self).nonnegative? end
+
+    # If each element of self is less-or-equal than other's elements
+    def >=(other); (self - other).nonnegative? end
+
     #--------------------- min/max -------------------------#
 
     # Return maximum element of vector

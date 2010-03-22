@@ -117,4 +117,14 @@ class VectorTest < Test::Unit::TestCase
     assert_equal(Vector[0,0,-1],v.wrap!(0, 5))
     assert_equal(Vector[1,2,3], v)
   end
+
+  def test_predicate
+    assert(Vector[1,2,3].positive?)
+    assert(Vector[-1,-2,-3].negative?)
+    assert(Vector[0,2,3].nonnegative?)
+    assert(Vector[0,2,3] < Vector[1,3,4])
+    assert(Vector[0,2,3] <= Vector[0,3,4])
+    assert(Vector[1,3,4] > Vector[0,2,3])
+    assert(Vector[0,2,3] <= Vector[0,3,4])
+  end
 end
