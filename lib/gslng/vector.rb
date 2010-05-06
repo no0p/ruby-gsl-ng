@@ -25,7 +25,7 @@ module GSLng
     def initialize(n, zero = false)
       @size = n
       @ptr = (zero ? GSLng.backend::gsl_vector_calloc(n) : GSLng.backend::gsl_vector_alloc(n))
-      GSLng.set_finalizer(self, :gsl_vector_free, @ptr)
+      GSLng.define_finalizer(self, :gsl_vector_free, @ptr)
       if (block_given?) then self.map_index!(Proc.new) end
     end
 
@@ -34,7 +34,7 @@ module GSLng
       
       @size = other.size
       @ptr = GSLng.backend::gsl_vector_alloc(other.size)
-      GSLng.set_finalizer(self, :gsl_vector_free, @ptr)
+      GSLng.define_finalizer(self, :gsl_vector_free, @ptr)
       
       GSLng.backend::gsl_vector_memcpy(@ptr, other.ptr)
     end

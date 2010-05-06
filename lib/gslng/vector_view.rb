@@ -12,7 +12,7 @@ module GSLng
 
       def initialize(ptr, owner, offset, size) # @private
         @owner,@size,@ptr = owner,size,ptr
-        GSLng.set_finalizer(self, :gsl_vector_free, @ptr)
+        GSLng.define_finalizer(self, :gsl_vector_free, @ptr)
       end
       
       # Returns a Vector (*NOT* a View) copied from this view. In other words,

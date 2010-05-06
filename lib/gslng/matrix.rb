@@ -26,7 +26,7 @@ module GSLng
     # You can optionally pass a block, in which case {#map_index!} will be called with it (i.e.: it works like Array.new).
     def initialize(m, n, zero = false)
       @ptr = (zero ? GSLng.backend::gsl_matrix_calloc(m, n) : GSLng.backend::gsl_matrix_alloc(m, n))
-      GSLng.set_finalizer(self, :gsl_matrix_free, @ptr)
+      GSLng.define_finalizer(self, :gsl_matrix_free, @ptr)
 
       @m,@n = m,n
       if (block_given?) then self.map_index!(Proc.new) end
@@ -35,7 +35,7 @@ module GSLng
     def initialize_copy(other) # @private
       ObjectSpace.undefine_finalizer(self) # TODO: ruby bug?
       @ptr = GSLng.backend::gsl_matrix_alloc(other.m, other.n)
-      GSLng.set_finalizer(self, :gsl_matrix_free, @ptr)
+      GSLng.define_finalizer(self, :gsl_matrix_free, @ptr)
 
       @m,@n = other.size
       GSLng.backend::gsl_matrix_memcpy(@ptr, other.ptr)

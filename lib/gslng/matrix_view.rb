@@ -14,7 +14,7 @@ module GSLng
         @owner = owner
         @m,@n = m,n
         @ptr = GSLng.backend::gsl_matrix_submatrix2(owner.ptr, x, y, m, n)
-        GSLng.set_finalizer(self, :gsl_matrix_free, @ptr)
+        GSLng.define_finalizer(self, :gsl_matrix_free, @ptr)
       end
 
       # Returns a Matrix (*NOT* a View) copied from this view. In other words,

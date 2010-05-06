@@ -11,14 +11,14 @@ module GSLng
       
       type = GSLng.backend.send(:"gsl_rng_#{@type}")
       @ptr = GSLng.backend.gsl_rng_alloc(type)
-      GSLng.set_finalizer(self, :gsl_rng_free, @ptr)
+      GSLng.define_finalizer(self, :gsl_rng_free, @ptr)
     end
 
     def initialize_copy
       ObjectSpace.undefine_finalizer(self)
       type = GSLng.backend.send(:"gsl_rng_#{@type}")
       @ptr = GSLng.backend.gsl_rng_alloc(type)
-      GSLng.set_finalizer(self, :gsl_rng_free, @ptr)
+      GSLng.define_finalizer(self, :gsl_rng_free, @ptr)
     end
   end
 end
