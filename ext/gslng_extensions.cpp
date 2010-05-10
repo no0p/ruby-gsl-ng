@@ -84,6 +84,18 @@ extern "C" void gsl_matrix_map_index(gsl_matrix* m, gsl_matrix_index_callback_t 
   		*gsl_matrix_ptr(m, i, j) = (*callback)(i, j);
 }
 
+// For Matrix::map_with_index!
+typedef double (*gsl_matrix_with_index_callback_t)(double, size_t, size_t);
+
+extern "C" void gsl_matrix_map_with_index(gsl_matrix* m, gsl_matrix_with_index_callback_t callback) {
+  size_t size1 = m->size1;
+  size_t size2 = m->size2;
+
+	for (size_t i = 0; i < size1; i++)
+    for (size_t j = 0; j < size2; j++)
+  		*gsl_matrix_ptr(m, i, j) = (*callback)(*gsl_matrix_const_ptr(m, i, j), i, j);
+}
+
 // A fast "each" for cases where there's no expected return value from the block
 typedef void (*gsl_matrix_each_callback_t)(double);
 

@@ -402,6 +402,10 @@ module GSLng
     # @yield [i,j]
     def map_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_index(@ptr, block); return self end
 
+    # Similar to {#map_index!}, in this case it receives both the element and the index to it
+    # @yield [elem,i,j]
+    def map_with_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_with_index(@ptr, block); return self end
+
     # @see #map!
     # @return [Matrix]
     # @yield [elem]

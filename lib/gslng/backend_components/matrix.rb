@@ -59,6 +59,9 @@ module GSLng
     callback :gsl_matrix_index_callback, [ :size_t, :size_t ], :double
     attach_function :gsl_matrix_map_index, [ :pointer, :gsl_matrix_index_callback ], :void
 
+    callback :gsl_matrix_with_index_callback, [ :double, :size_t, :size_t ], :double
+    attach_function :gsl_matrix_map_with_index, [ :pointer, :gsl_matrix_with_index_callback ], :void
+
     callback :gsl_matrix_each_callback, [ :double ], :void
     attach_function :gsl_matrix_each, [ :pointer, :gsl_matrix_each_callback ], :void
 
