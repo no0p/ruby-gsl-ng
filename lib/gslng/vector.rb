@@ -24,7 +24,7 @@ module GSLng
     # You can optionally pass a block, in which case {#map_index!} will be called with it (i.e.: it works like {Array.new}).
     def initialize(n, zero = false)
       @size = n
-      @ptr = (zero ? GSLng.backend::gsl_vector_calloc(n) : GSLng.backend::gsl_vector_alloc(n))
+      @ptr = (zero ? GSLng.backend.gsl_vector_calloc(n) : GSLng.backend.gsl_vector_alloc(n))
       GSLng.define_finalizer(self, :gsl_vector_free, @ptr)
       if (block_given?) then self.map_index!(Proc.new) end
     end
