@@ -52,24 +52,12 @@ module GSLng
     attach_function :gsl_blas_daxpy, [ :double, :pointer, :pointer ], :int
     attach_function :gsl_blas_dscal, [ :double, :pointer ], :void
 
+    # Sorting
+    attach_function :gsl_sort_vector, [ :pointer ], :void
+    
+    # From local extension
     # views
     attach_function :gsl_vector_subvector2, [ :pointer, :size_t, :size_t ], :pointer
     attach_function :gsl_vector_subvector_with_stride2, [ :pointer, :size_t, :size_t, :size_t ], :pointer
-
-    # From local extension
-    callback :gsl_vector_callback, [ :double ], :double
-    attach_function :gsl_vector_map, [ :pointer, :gsl_vector_callback ], :void
-
-    callback :gsl_vector_index_callback, [ :size_t ], :double
-    attach_function :gsl_vector_map_index, [ :pointer, :gsl_vector_index_callback ], :void
-
-    callback :gsl_vector_each_callback, [ :double ], :void
-    attach_function :gsl_vector_each, [ :pointer, :gsl_vector_each_callback ], :void
-
-    callback :gsl_vector_each_with_index_callback, [ :double, :size_t ], :void
-    attach_function :gsl_vector_each_with_index, [ :pointer, :gsl_vector_each_with_index_callback ], :void
-
-    # Sorting
-    attach_function :gsl_sort_vector, [ :pointer ], :void
   end
 end

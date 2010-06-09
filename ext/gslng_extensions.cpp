@@ -4,44 +4,81 @@
  * This could actually a standard C library (not a Ruby extension), but it's easier this way.
  */
 
+#include <ruby.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-extern "C" void Init_gslng_extensions(void) { }
+/*** Ruby C API functions ***/
+static VALUE gsl_vector_map(VALUE self, VALUE ptr) {
+	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	for (size_t i = 0; i < v->size; i++)
+		gsl_vector_set(v, i, NUM2DBL(rb_yield(rb_float_new(gsl_vector_get(v, i)))));
+	
+	return self;
+}
+
+static VALUE gsl_vector_map_index(VALUE self, VALUE ptr) {
+	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	for (size_t i = 0; i < v->size; i++) {
+		VALUE vi = ULONG2NUM(i);
+		gsl_vector_set(v, i, NUM2DBL(rb_yield(vi)));
+	}
+	
+	return self;
+}
+
+static VALUE gsl_vector_each_with_index(VALUE self, VALUE ptr) {
+	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	for (size_t i = 0; i < v->size; i++) {
+		VALUE vi = ULONG2NUM(i);
+		rb_yield_values(2, rb_float_new(gsl_vector_get(v, i)), vi);
+	}
+	
+	return self;
+}
+
+static VALUE gsl_vector_each(VALUE self, VALUE ptr) {
+	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	for (size_t i = 0; i < v->size; i++)
+		rb_yield(rb_float_new(gsl_vector_get(v, i)));
+	
+	return self;
+}
+
+static VALUE gsl_vector_to_a(VALUE self, VALUE ptr) {
+	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	
+	VALUE array = rb_ary_new2(v->size);
+	for (size_t i = 0; i < v->size; i++)
+		rb_ary_store(array, i, rb_float_new(gsl_vector_get(v, i)));
+	
+	return array;
+}
+
+static VALUE gsl_vector_from_array(VALUE self, VALUE ptr, VALUE array) {
+	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	if (v->size != RARRAY_LEN(array)) rb_raise(rb_eRuntimeError, "Sizes differ!");
+	
+	for (size_t i = 0; i < v->size; i++)
+		gsl_vector_set(v, i, NUM2DBL(rb_ary_entry(array, i)));
+	
+	return self;
+}
+
+extern "C" void Init_gslng_extensions(void) {
+	VALUE GSLng_module = rb_define_module("GSLng");
+	VALUE Backend_module = rb_funcall(GSLng_module, rb_intern("backend"), 0);
+	
+	// vector
+	rb_define_module_function(Backend_module, "gsl_vector_map!", (VALUE(*)(ANYARGS))gsl_vector_map, 1);
+	rb_define_module_function(Backend_module, "gsl_vector_map_index!", (VALUE(*)(ANYARGS))gsl_vector_map_index, 1);	
+	rb_define_module_function(Backend_module, "gsl_vector_each_with_index", (VALUE(*)(ANYARGS))gsl_vector_each_with_index, 1);
+	rb_define_module_function(Backend_module, "gsl_vector_each", (VALUE(*)(ANYARGS))gsl_vector_each, 1);
+	rb_define_module_function(Backend_module, "gsl_vector_to_a", (VALUE(*)(ANYARGS))gsl_vector_to_a, 1);
+	rb_define_module_function(Backend_module, "gsl_vector_from_array", (VALUE(*)(ANYARGS))gsl_vector_from_array, 2);
+}
 
 /**** Vector *****/
-
-// For Vector::map!
-typedef double (*gsl_vector_callback_t)(double);
-
-extern "C" void gsl_vector_map(gsl_vector* v, gsl_vector_callback_t callback) {
-	for (size_t i = 0; i < v->size; i++)
-		*gsl_vector_ptr(v, i) = (*callback)(*gsl_vector_const_ptr(v, i));
-}
-
-// For Vector::map_index!
-typedef double (*gsl_vector_index_callback_t)(size_t);
-
-extern "C" void gsl_vector_map_index(gsl_vector* v, gsl_vector_index_callback_t callback) {
-	for (size_t i = 0; i < v->size; i++)
-		*gsl_vector_ptr(v, i) = (*callback)(i);
-}
-
-// A fast "each" for cases where there's no expected return value from the block
-typedef void (*gsl_vector_each_callback_t)(double);
-
-extern "C" void gsl_vector_each(gsl_vector* v, gsl_vector_each_callback_t callback) {
-	for (size_t i = 0; i < v->size; i++)
-		(*callback)(*gsl_vector_const_ptr(v, i));
-}
-
-// A fast "each_with_index" for cases where there's no expected return value from the block
-typedef void (*gsl_vector_each_with_index_callback_t)(double, size_t);
-
-extern "C" void gsl_vector_each_with_index(gsl_vector* v, gsl_vector_each_with_index_callback_t callback) {
-	for (size_t i = 0; i < v->size; i++)
-		(*callback)(*gsl_vector_const_ptr(v, i), i);
-}
 
 // Hide the view in a new vector (gsl_vector_subvector)
 extern "C" gsl_vector* gsl_vector_subvector_with_stride2(gsl_vector* v, size_t offset, size_t stride, size_t n) {
@@ -107,6 +144,19 @@ extern "C" void gsl_matrix_each(gsl_matrix* m, gsl_matrix_each_callback_t callba
     for (size_t j = 0; j < size2; j++)
   		(*callback)(*gsl_matrix_const_ptr(m, i, j));
 }
+
+// A fast "each_with_index" for cases where there's no expected return value from the block
+typedef void (*gsl_matrix_each_with_index_callback_t)(double, size_t, size_t);
+
+extern "C" void gsl_matrix_each_with_index(gsl_matrix* m, gsl_matrix_each_with_index_callback_t callback) {
+  size_t size1 = m->size1;
+  size_t size2 = m->size2;
+
+	for (size_t i = 0; i < size1; i++)
+    for (size_t j = 0; j < size2; j++)
+  		(*callback)(*gsl_matrix_const_ptr(m, i, j), i, j);
+}
+
 
 // Hide the view in a new matrix (gsl_matrix_submatrix)
 extern "C" gsl_matrix* gsl_matrix_submatrix2(gsl_matrix* m_ptr, size_t x, size_t y, size_t n, size_t m) {

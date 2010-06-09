@@ -1,4 +1,6 @@
-#!/usr/bin/ruby -I../lib -I../ext
+#!/usr/bin/ruby 
+$:.unshift('../lib')
+$:.unshift('../ext')
 require 'benchmark'
 require 'gslng'
 require 'rbgsl'
@@ -7,20 +9,18 @@ include Benchmark
 
 n = 100
 size = 5000
-
-puts "This is GSLng #{GSLng::VERSION}"; puts
-
 puts "Vector#each vs Vector#fast_each - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.zero(size)
-  x.report("each      :") {n.times {s = 0; v.each do |e| s += e end}}
-  x.report("fast_each :") {n.times {s = 0; v.fast_each do |e| s += e end}}
+  gv = GSL::Vector.alloc(v.to_a)
+  x.report("rb-gsl each:") {n.times {s = 0; gv.each do |e| s += e end}}  
+  x.report("each       :") {n.times {s = 0; v.each do |e| s += e end}}
+  x.report("fast_each  :") {n.times {s = 0; v.fast_each do |e| s += e end}}
 end
 puts
 
 n = 500
 size = 50000
-
 puts "Norm (BLAS) - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.random(size)
@@ -29,6 +29,20 @@ bm do |x|
   x.report("GSLng  :") {n.times {v.norm}}
 end
 puts
+
+n=10
+size = 50000
+puts "Vector#map!"
+bm do |x|
+  v = GSLng::Vector.random(size)
+  gv = GSL::Vector.alloc(v.to_a)
+  i = rand(size)
+  l = lambda{|e| rand}
+  x.report("rb-gsl :") {n.times {gv.collect!{|e| rand}}}
+  x.report("GSLng  :") {n.times {v.map!{|e| rand}}}
+end
+puts
+
 
 n=5000
 size = 5000
@@ -47,7 +61,41 @@ puts "Sort - vector of #{size} elements"
 bm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
-  x.report("rb-gsl :") {n.times {v.sort!}}
-  x.report("GSLng  :") {n.times {gv.sort!}}
+  x.report("rb-gsl :") {n.times {gv.sort!}}
+  x.report("GSLng  :") {n.times {v.sort!}}
 end
 puts
+
+n=500
+size = 5000
+puts "Vector#to_a"
+bm do |x|
+  v = GSLng::Vector.random(size)
+  gv = GSL::Vector.alloc(v.to_a)
+  x.report("rb-gsl :") {n.times {gv.to_a}}
+  x.report("GSLng  :") {n.times {v.to_a}}
+end
+puts
+
+n=500
+size = 5000
+puts "Vector::from_array"
+bm do |x|
+  a = Array.new(size) { rand }
+  x.report("rb-gsl :") {n.times {GSL::Vector.alloc(a)}}
+  x.report("GSLng  :") {n.times {GSLng::Vector.from_array(a)}}
+end
+puts
+
+n=500000
+size = 5000
+puts "Vector#[]"
+bm do |x|
+  v = GSLng::Vector.random(size)
+  gv = GSL::Vector.alloc(v.to_a)
+  i = rand(size)
+  x.report("rb-gsl :") {n.times {gv[i]}}
+  x.report("GSLng  :") {n.times {v[i]}}
+end
+puts
+

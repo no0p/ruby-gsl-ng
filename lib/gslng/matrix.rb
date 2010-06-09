@@ -377,6 +377,12 @@ module GSLng
     def fast_each(block = Proc.new) 
       GSLng.backend::gsl_matrix_each(self.ptr, block)
     end
+    
+    # @see #each
+    # @yield [elem,i,j]
+    def fast_each_with_index(block = Proc.new) 
+      GSLng.backend::gsl_matrix_each_with_index(self.ptr, block)
+    end    
 
     # Yields the block for each row *view* ({Matrix::View}).
     # @yield [view]
@@ -436,6 +442,15 @@ module GSLng
       end
 
       return s
+    end
+    
+    # Converts the matrix to an Array (of Arrays).
+    # @example
+    #  Matrix[[1,2],[2,3]] => [[1.0,2.0],[2.0,3.0]]
+    def to_a
+      a = Array.new(self.m) {|i| Array.new(self.n)}
+      self.fast_each_with_index {|e,i,j| a[i][j] = e}
+      return a
     end
 
     def inspect # @private

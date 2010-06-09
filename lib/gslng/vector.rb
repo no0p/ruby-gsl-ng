@@ -45,7 +45,9 @@ module GSLng
     # Create a vector from an Array.
     def Vector.from_array(array)
       if (array.empty?) then raise "Can't create empty vector" end
-      Vector.new(array.size) {|i| array[i]}
+      v = Vector.new(array.size)
+      GSLng.backend.gsl_vector_from_array(v.ptr.to_i, array)
+      return v
     end
 
     # Creates a Vector from an Array or a Range
@@ -212,7 +214,7 @@ module GSLng
       max,other = self.coerce(max)
       delta = Vector.new(self.size)
       range = max - min
-
+      
       self.map_index! do |i|
         if (self[i] < min[i]) then delta[i] = 1; self[i] + range[i]
         elsif (self[i] >= max[i]) then delta[i] = -1; self[i] - range[i]
@@ -347,21 +349,21 @@ module GSLng
     # @return [void]
     # @yield [elem]
     def fast_each(block = Proc.new) 
-      GSLng.backend::gsl_vector_each(self.ptr, block)
+      GSLng.backend::gsl_vector_each(self.ptr.to_i, &block)
     end
 
     # @see #each
     # @yield [elem,i]
     def fast_each_with_index(block = Proc.new)
-      GSLng.backend::gsl_vector_each_with_index(self.ptr, block)
+      GSLng.backend::gsl_vector_each_with_index(self.ptr.to_i, &block)
     end
 
     # Efficient {#map!} implementation.
-    def map!(block = Proc.new); GSLng.backend::gsl_vector_map(self.ptr, block); return self end
+    def map!(block = Proc.new); GSLng.backend::gsl_vector_map!(self.ptr.to_i, &block); return self end
 
     # Similar to {#map!}, but passes the index to the element instead.
     # @yield [i]
-    def map_index!(block = Proc.new); GSLng.backend::gsl_vector_map_index(self.ptr, block); return self end
+    def map_index!(block = Proc.new); GSLng.backend::gsl_vector_map_index!(self.ptr.to_i, &block); return self end
 
     # @return [Vector]
     # @see map_index!
@@ -382,7 +384,9 @@ module GSLng
     # @return [String]
     def join(sep = $,)
       s = ''
-      GSLng.backend::gsl_vector_each(self.ptr, lambda {|e| s += (s.empty?() ? e.to_s : "#{sep}#{e}")})
+      self.fast_each do |e|
+        s += (s.empty?() ? e.to_s : "#{sep}#{e}")
+      end
       return s
     end
 
@@ -413,7 +417,7 @@ module GSLng
 
     # @return [Array]
     def to_a
-      Array.new(@size) {|i| self[i]}
+      GSLng.backend.gsl_vector_to_a(self.ptr.to_i)
     end
 
     # Create a row matrix from this vector
