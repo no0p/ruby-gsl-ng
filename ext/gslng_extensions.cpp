@@ -8,9 +8,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-/************************* Ruby C API functions *****************************/
-
-// Vector
+/************************* Vector functions *****************************/
 
 static VALUE gsl_vector_map(VALUE self, VALUE ptr) {
 	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
@@ -84,7 +82,8 @@ extern "C" gsl_vector* gsl_vector_subvector2(gsl_vector* v, size_t offset, size_
   return vector_view;
 }
 
-/***** Matrix *****/
+/************************* Matrix functions *****************************/
+
 static VALUE gsl_matrix_map(VALUE self, VALUE ptr) {
   gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
   size_t size1 = m->size1;
@@ -97,7 +96,6 @@ static VALUE gsl_matrix_map(VALUE self, VALUE ptr) {
   return self;
 }
 
-// For Matrix::map_index!
 static VALUE gsl_matrix_map_index(VALUE self, VALUE ptr) {
   gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
   size_t size1 = m->size1;
@@ -110,7 +108,6 @@ static VALUE gsl_matrix_map_index(VALUE self, VALUE ptr) {
   return self;
 }
 
-// For Matrix::map_with_index!
 static VALUE gsl_matrix_map_with_index(VALUE self, VALUE ptr) {
   gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
   size_t size1 = m->size1;
@@ -123,7 +120,6 @@ static VALUE gsl_matrix_map_with_index(VALUE self, VALUE ptr) {
   return self;
 }
 
-// A fast "each" for cases where there's no expected return value from the block
 static VALUE gsl_matrix_each(VALUE self, VALUE ptr) {
   gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
   size_t size1 = m->size1;
@@ -136,7 +132,6 @@ static VALUE gsl_matrix_each(VALUE self, VALUE ptr) {
   return self;
 }
 
-// A fast "each_with_index" for cases where there's no expected return value from the block
 static VALUE gsl_matrix_each_with_index(VALUE self, VALUE ptr) {
   gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
   size_t size1 = m->size1;
@@ -181,7 +176,6 @@ static VALUE gsl_matrix_from_array(VALUE self, VALUE ptr, VALUE array) {
 	return self;
 }
 
-
 // Hide the view in a new matrix (gsl_matrix_submatrix)
 extern "C" gsl_matrix* gsl_matrix_submatrix2(gsl_matrix* m_ptr, size_t x, size_t y, size_t n, size_t m) {
   gsl_matrix_view view = gsl_matrix_submatrix(m_ptr, x, y, n, m);
@@ -203,6 +197,9 @@ extern "C" gsl_vector* gsl_matrix_column_view(gsl_matrix* m_ptr, size_t column, 
   *vector_view = view.vector;
   return vector_view;
 }
+
+
+/************************* Module initialization *****************************/
 
 extern "C" void Init_gslng_extensions(void) {
 	VALUE GSLng_module = rb_define_module("GSLng");
