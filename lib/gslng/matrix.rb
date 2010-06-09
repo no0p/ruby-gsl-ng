@@ -49,8 +49,14 @@ module GSLng
     def Matrix.from_array(array)
       if (array.empty?) then raise "Can't create empty matrix" end
 
-      if (Numeric === array[0]) then
-        Matrix.new(1, array.size) {|i,j| array[j]}
+      if (Numeric === array[0])
+        m = Matrix.new(1, array.size)
+        GSLng.backend.gsl_matrix_from_array(m.ptr.to_i, [ array ])
+        return m
+      elsif (Array === array[0])
+        m = Matrix.new(array.size, array[0].size)
+        GSLng.backend.gsl_matrix_from_array(m.ptr.to_i, array)
+        return m
       else
         Matrix.new(array.size, array[0].to_a.size) {|i,j| array[i].to_a[j]}
       end
@@ -371,17 +377,17 @@ module GSLng
       @m.times {|i| @n.times {|j| yield(self[i,j], i, j) } }
     end
 
-    # Same as {#each}, but faster. The catch is that this method returns nothing.
+    # Calls the block on each element of the matrix
     # @yield [elem]
     # @return [void]
-    def fast_each(block = Proc.new) 
-      GSLng.backend::gsl_matrix_each(self.ptr, block)
+    def each(block = Proc.new) 
+      GSLng.backend::gsl_matrix_each(self.ptr.to_i, &block)
     end
     
     # @see #each
     # @yield [elem,i,j]
-    def fast_each_with_index(block = Proc.new) 
-      GSLng.backend::gsl_matrix_each_with_index(self.ptr, block)
+    def each_with_index(block = Proc.new) 
+      GSLng.backend::gsl_matrix_each_with_index(self.ptr.to_i, &block)
     end    
 
     # Yields the block for each row *view* ({Matrix::View}).
@@ -402,15 +408,15 @@ module GSLng
 
     # Efficient {#map!} implementation
     # @yield [elem]
-    def map!(block = Proc.new); GSLng.backend::gsl_matrix_map(@ptr, block); return self end
+    def map!(block = Proc.new); GSLng.backend::gsl_matrix_map!(@ptr.to_i, &block); return self end
 
     # Alternate version of {#map!}, in this case the block receives the index (row, column) as a parameter.
     # @yield [i,j]
-    def map_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_index(@ptr, block); return self end
+    def map_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_index!(@ptr.to_i, &block); return self end
 
     # Similar to {#map_index!}, in this case it receives both the element and the index to it
     # @yield [elem,i,j]
-    def map_with_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_with_index(@ptr, block); return self end
+    def map_with_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_with_index!(@ptr.to_i, &block); return self end
 
     # @see #map!
     # @return [Matrix]
@@ -424,7 +430,9 @@ module GSLng
     #  Matrix[[1,2],[2,3]].join => "1.0 2.0 2.0 3.0"
     def join(sep = $,)
       s = ''
-      GSLng.backend::gsl_matrix_each(@ptr, lambda {|e| s += (s.empty?() ? e.to_s : "#{sep}#{e}")})
+      self.each do |e|
+        s += (s.empty?() ? e.to_s : "#{sep}#{e}")
+      end
       return s
     end
 
@@ -448,9 +456,7 @@ module GSLng
     # @example
     #  Matrix[[1,2],[2,3]] => [[1.0,2.0],[2.0,3.0]]
     def to_a
-      a = Array.new(self.m) {|i| Array.new(self.n)}
-      self.fast_each_with_index {|e,i,j| a[i][j] = e}
-      return a
+      GSLng.backend.gsl_matrix_to_a(self.ptr.to_i)
     end
 
     def inspect # @private

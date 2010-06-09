@@ -2,10 +2,10 @@ module GSLng
   # A fixed-size n-dimensional vector.
   #
   # =Notes
-  # * {#each} is implemented through calls to {#[]}, which can be relatively slow (compared to direct C pointer access)
-  #   for big Vectors. There's a faster version ({#fast_each}) that can be used when there's not return value expected from the {#each} call.
-  # * Since this class includes Enumerable, and Enumerable's methods call {#each}, certain methods are redefined (like {#max} and {#min})
-  #   so they use {#fast_each} instead. Thus, any other Enumerable's method not defined here will be slower.
+  # * {#each}, {#map} and similar methods are implemented with C versions which should be fast.
+  # * {#map} returns a Vector, not an Array. Use {#map_array} for that.
+  # * While this class includes Enumerable, certain methods are redefined (like {#max} and {#min})
+  #   so they use internal GSL methods.
   # * Some functions (like {#sum}, {#dot}, and others) use BLAS functions (through GSLng's CBLAS interface).
   # * In contrary to Array, operators {#[]} and {#[]=} will raise an exception when accessing out-of-bounds elements.
   # * Operator {#*} multiplies two vectors element-by-element. To perform a dot product use the {#^} operator instead (or the {#dot} alias).
@@ -339,22 +339,16 @@ module GSLng
     def max_index; GSLng.backend::gsl_vector_max_index(self.ptr) end
 
     #--------------------- block handling -------------------------#
-    
-    # @yield [elem]
-    def each
-      @size.times {|i| yield(self[i])}
-    end
 
     # Same as {#each}, but faster. The catch is that this method returns nothing.
-    # @return [void]
     # @yield [elem]
-    def fast_each(block = Proc.new) 
+    def each(block = Proc.new)
       GSLng.backend::gsl_vector_each(self.ptr.to_i, &block)
     end
 
     # @see #each
     # @yield [elem,i]
-    def fast_each_with_index(block = Proc.new)
+    def each_with_index(block = Proc.new)
       GSLng.backend::gsl_vector_each_with_index(self.ptr.to_i, &block)
     end
 
@@ -370,13 +364,11 @@ module GSLng
     # @yield [i]
     def map_index(block = Proc.new); self.dup.map_index!(block) end
 
+    alias_method :map_array, :map
+
     # @return [Vector]
     # @yield [elem]
     def map(block = Proc.new); self.dup.map!(block) end
-
-    # @return [Array]
-    # @yield [elem]    
-    def map_array(block = Proc.new) ary = []; self.fast_each {|elem| ary << block.call(elem)}; return ary end
 
     #--------------------- conversions -------------------------#
 
@@ -384,7 +376,7 @@ module GSLng
     # @return [String]
     def join(sep = $,)
       s = ''
-      self.fast_each do |e|
+      self.each do |e|
         s += (s.empty?() ? e.to_s : "#{sep}#{e}")
       end
       return s
@@ -443,7 +435,7 @@ module GSLng
     # Element-by-element comparison. Admits comparing to Array.
     def ==(other)
       if (self.size != other.size) then return false end
-      self.fast_each_with_index do |elem,i|
+      self.each_with_index do |elem,i|
         if (elem != other[i]) then return false end
       end
       return true

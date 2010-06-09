@@ -9,20 +9,19 @@ include Benchmark
 
 n = 100
 size = 5000
-puts "Vector#each vs Vector#fast_each - vector of #{size} elements"
-bm do |x|
+puts "Vector#each - vector of #{size} elements"
+bmbm do |x|
   v = GSLng::Vector.zero(size)
   gv = GSL::Vector.alloc(v.to_a)
   x.report("rb-gsl each:") {n.times {s = 0; gv.each do |e| s += e end}}  
   x.report("each       :") {n.times {s = 0; v.each do |e| s += e end}}
-  x.report("fast_each  :") {n.times {s = 0; v.fast_each do |e| s += e end}}
 end
 puts
 
 n = 500
 size = 50000
 puts "Norm (BLAS) - vector of #{size} elements"
-bm do |x|
+bmbm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
   x.report("rb-gsl :") {n.times {gv.dnrm2}}
@@ -33,7 +32,7 @@ puts
 n=10
 size = 50000
 puts "Vector#map!"
-bm do |x|
+bmbm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
   i = rand(size)
@@ -47,7 +46,7 @@ puts
 n=5000
 size = 5000
 puts "Vector product - two vectors of #{size} elements"
-bm do |x|
+bmbm do |x|
   v,v2 = GSLng::Vector.random(size),GSLng::Vector.random(size)
   gv,gv2 = GSL::Vector.alloc(v.to_a),GSL::Vector.alloc(v2.to_a)
   x.report("rb-gsl :") {n.times {gv.mul!(gv2)}}
@@ -58,7 +57,7 @@ puts
 n=500
 size = 5000
 puts "Sort - vector of #{size} elements"
-bm do |x|
+bmbm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
   x.report("rb-gsl :") {n.times {gv.sort!}}
@@ -69,7 +68,7 @@ puts
 n=500
 size = 5000
 puts "Vector#to_a"
-bm do |x|
+bmbm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
   x.report("rb-gsl :") {n.times {gv.to_a}}
@@ -80,7 +79,7 @@ puts
 n=500
 size = 5000
 puts "Vector::from_array"
-bm do |x|
+bmbm do |x|
   a = Array.new(size) { rand }
   x.report("rb-gsl :") {n.times {GSL::Vector.alloc(a)}}
   x.report("GSLng  :") {n.times {GSLng::Vector.from_array(a)}}
@@ -90,7 +89,7 @@ puts
 n=500000
 size = 5000
 puts "Vector#[]"
-bm do |x|
+bmbm do |x|
   v = GSLng::Vector.random(size)
   gv = GSL::Vector.alloc(v.to_a)
   i = rand(size)

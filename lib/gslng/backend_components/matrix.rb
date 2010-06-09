@@ -52,22 +52,7 @@ module GSLng
     attach_function :gsl_matrix_transpose_memcpy, [ :pointer, :pointer ], :int
     attach_function :gsl_matrix_transpose, [ :pointer ], :int
     
-    # From local extension
-    callback :gsl_matrix_callback, [ :double ], :double
-    attach_function :gsl_matrix_map, [ :pointer, :gsl_matrix_callback ], :void
-
-    callback :gsl_matrix_index_callback, [ :size_t, :size_t ], :double
-    attach_function :gsl_matrix_map_index, [ :pointer, :gsl_matrix_index_callback ], :void
-
-    callback :gsl_matrix_with_index_callback, [ :double, :size_t, :size_t ], :double
-    attach_function :gsl_matrix_map_with_index, [ :pointer, :gsl_matrix_with_index_callback ], :void
-
-    callback :gsl_matrix_each_callback, [ :double ], :void
-    attach_function :gsl_matrix_each, [ :pointer, :gsl_matrix_each_callback ], :void
-
-    callback :gsl_matrix_each_with_index_callback, [ :double, :size_t, :size_t ], :void
-    attach_function :gsl_matrix_each_with_index, [ :pointer, :gsl_matrix_each_with_index_callback ], :void
-    
+    # From local extension    
     # views
     attach_function :gsl_matrix_submatrix2, [ :pointer, :size_t, :size_t, :size_t, :size_t ], :pointer
     attach_function :gsl_matrix_row_view, [ :pointer, :size_t, :size_t, :size_t ], :pointer
