@@ -1,3 +1,24 @@
+=== 0.2.2
+* FIXES:
+  * HUGE memory leak, no GSL object was ever freed.
+  * Remove -march flag for MAC
+* LOTS of improvements:
+  * Added map_array: a map() version that actually returns an Array instead of a Vector/Matrix
+  * Now you use the & idiom for map methods and such (like map_array(&:to_s))
+  * Added Matrix#each_row / Matrix#each_column (which pass row and column matrices to the block)
+  * Added Matrix#row_vecview / Matrix#column_vecview (construct a row and column Matrix::View)
+  * Added Matrix#each_vec_row / Matrix#each_vec_column (same as the previous ones, but the block will receive a Vector::View instead)
+  * Added x, y, z and w accessors for Vector (this will probably go into Vector2, Vector3 and Vector4 in the future)
+  * "negate" operator
+  * Documentation is now YARD based. This will significantly improve the documentation readability.
+  * Added Vector#map_index! and Vector#wrap!
+  * Initial support for Random Number Generators (only Uniform and Gaussian distributions for the moment)
+  * Added Vector#<, #>, #<= and #>=
+  * Added Matrix#map_with_index!
+  * No more #fast_each and stuff. Now #each IS fast. This is accomplished by writing actual Ruby-C code instead of using FFI for
+    these functions.
+  * Initial support for GSL's special functions
+
 === 0.2.1
 * Fixed for FFI 0.6.0
 
