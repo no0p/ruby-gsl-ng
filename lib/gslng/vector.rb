@@ -230,7 +230,8 @@ module GSLng
     # @raise [RuntimeError] if out-of-bounds
     # @todo support ranges    
     def [](index)
-      GSLng.backend::gsl_vector_get(self.ptr, (index < 0 ? @size + index : index))
+      #GSLng.backend::gsl_vector_get(self.ptr, (index < 0 ? @size + index : index))
+      GSLng.backend.gsl_vector_get_operator(self.ptr.to_i, index)
     end
 
     # Set the i-th element.

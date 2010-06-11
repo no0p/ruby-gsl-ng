@@ -66,6 +66,13 @@ static VALUE gsl_vector_from_array(VALUE self, VALUE ptr, VALUE array) {
 	return self;
 }
 
+static VALUE gsl_vector_get_operator(VALUE self, VALUE ptr, VALUE element) {
+  gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+  long i = FIX2LONG(element);
+  if (i < 0) { i = v->size + i; }
+  return rb_float_new(gsl_vector_get(v, (size_t)i));
+}
+
 // Hide the view in a new vector (gsl_vector_subvector)
 extern "C" gsl_vector* gsl_vector_subvector_with_stride2(gsl_vector* v, size_t offset, size_t stride, size_t n) {
   gsl_vector_view view = gsl_vector_subvector_with_stride(v, offset, stride, n);
@@ -221,6 +228,7 @@ extern "C" void Init_gslng_extensions(void) {
 	VALUE Backend_module = rb_funcall(GSLng_module, rb_intern("backend"), 0);
 
 	// vector
+  rb_define_module_function(Backend_module, "gsl_vector_get_operator", (VALUE(*)(ANYARGS))gsl_vector_get_operator, 2);
 	rb_define_module_function(Backend_module, "gsl_vector_map!", (VALUE(*)(ANYARGS))gsl_vector_map, 1);
 	rb_define_module_function(Backend_module, "gsl_vector_map_index!", (VALUE(*)(ANYARGS))gsl_vector_map_index, 1);
 	rb_define_module_function(Backend_module, "gsl_vector_each_with_index", (VALUE(*)(ANYARGS))gsl_vector_each_with_index, 1);

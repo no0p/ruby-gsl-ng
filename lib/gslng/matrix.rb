@@ -82,15 +82,15 @@ module GSLng
     #--------------------- setting values -------------------------#
 
     # Set all values to _v_
-    def all!(v); GSLng.backend::gsl_matrix_set_all(@ptr, v); return self end
+    def all!(v); GSLng.backend::gsl_matrix_set_all(self.ptr, v); return self end
     alias_method :set!, :all!
     alias_method :fill!, :all!
 
     # Set all values to zero
-    def zero!; GSLng.backend::gsl_matrix_set_zero(@ptr); return self end
+    def zero!; GSLng.backend::gsl_matrix_set_zero(self.ptr); return self end
 
     # Set the identity matrix values
-    def identity; GSLng.backend::gsl_matrix_set_identity(@ptr); return self end
+    def identity; GSLng.backend::gsl_matrix_set_identity(self.ptr); return self end
 
     #--------------------- set/get -------------------------#
 
@@ -107,14 +107,14 @@ module GSLng
       if (Symbol === i && Symbol === j) then return self
       elsif (Symbol === i)
         col = Vector.new(@m)
-        GSLng.backend::gsl_matrix_get_col(col.ptr, @ptr, j)
+        GSLng.backend::gsl_matrix_get_col(col.ptr, self.ptr, j)
         return col.to_matrix
       elsif (Symbol === j)
         row = Vector.new(@n)
-        GSLng.backend::gsl_matrix_get_row(row.ptr, @ptr, i)
+        GSLng.backend::gsl_matrix_get_row(row.ptr, self.ptr, i)
         return row.to_matrix
       else
-        GSLng.backend::gsl_matrix_get(@ptr, i, j)
+        GSLng.backend::gsl_matrix_get(self.ptr, i, j)
       end
     end
 
@@ -127,20 +127,20 @@ module GSLng
         if (Numeric === value) then self.fill!(value)
         else
           x,y = self.coerce(value)
-          GSLng.backend::gsl_matrix_memcpy(@ptr, x.ptr)
+          GSLng.backend::gsl_matrix_memcpy(self.ptr, x.ptr)
         end
       elsif (Symbol === i)
         col = Vector.new(@m)
         x,y = col.coerce(value)
-        GSLng.backend::gsl_matrix_set_col(@ptr, j, x.ptr)
+        GSLng.backend::gsl_matrix_set_col(self.ptr, j, x.ptr)
         return col
       elsif (Symbol === j)
         row = Vector.new(@n)
         x,y = row.coerce(value)
-        GSLng.backend::gsl_matrix_set_row(@ptr, i, x.ptr)
+        GSLng.backend::gsl_matrix_set_row(self.ptr, i, x.ptr)
         return row
       else
-        GSLng.backend::gsl_matrix_set(@ptr, i, j, value)
+        GSLng.backend::gsl_matrix_set(self.ptr, i, j, value)
       end
 
       return self
@@ -306,16 +306,16 @@ module GSLng
     #--------------------- predicate methods -------------------------#
     
     # if all elements are zero
-    def zero?; GSLng.backend::gsl_matrix_isnull(@ptr) == 1 ? true : false end
+    def zero?; GSLng.backend::gsl_matrix_isnull(self.ptr) == 1 ? true : false end
 
     # if all elements are strictly positive (>0)
-    def positive?; GSLng.backend::gsl_matrix_ispos(@ptr) == 1 ? true : false end
+    def positive?; GSLng.backend::gsl_matrix_ispos(self.ptr) == 1 ? true : false end
 
     #if all elements are strictly negative (<0)
-    def negative?; GSLng.backend::gsl_matrix_isneg(@ptr) == 1 ? true : false end
+    def negative?; GSLng.backend::gsl_matrix_isneg(self.ptr) == 1 ? true : false end
     
     # if all elements are non-negative (>=0)
-    def nonnegative?; GSLng.backend::gsl_matrix_isnonneg(@ptr) == 1 ? true : false end
+    def nonnegative?; GSLng.backend::gsl_matrix_isnonneg(self.ptr) == 1 ? true : false end
 
     # If this is a column Matrix
     def column?; self.columns == 1 end
@@ -408,15 +408,15 @@ module GSLng
 
     # Efficient {#map!} implementation
     # @yield [elem]
-    def map!(block = Proc.new); GSLng.backend::gsl_matrix_map!(@ptr.to_i, &block); return self end
+    def map!(block = Proc.new); GSLng.backend::gsl_matrix_map!(self.ptr.to_i, &block); return self end
 
     # Alternate version of {#map!}, in this case the block receives the index (row, column) as a parameter.
     # @yield [i,j]
-    def map_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_index!(@ptr.to_i, &block); return self end
+    def map_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_index!(self.ptr.to_i, &block); return self end
 
     # Similar to {#map_index!}, in this case it receives both the element and the index to it
     # @yield [elem,i,j]
-    def map_with_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_with_index!(@ptr.to_i, &block); return self end
+    def map_with_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_with_index!(self.ptr.to_i, &block); return self end
 
     # @see #map!
     # @return [Matrix]

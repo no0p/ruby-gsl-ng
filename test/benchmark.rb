@@ -7,14 +7,27 @@ require 'rbgsl'
 require 'narray'
 include Benchmark
 
+puts '#################################### Vector ####################################'
+
+n=500000
+size = 5000
+puts "Vector#[]"
+bmbm do |x|
+  v = GSLng::Vector.random(size)
+  gv = GSL::Vector.alloc(v.to_a)
+  x.report("rb-gsl :") {n.times {i=rand(size); gv[i]}}
+  x.report("GSLng  :") {n.times {i=rand(size); v[i]}}
+end
+puts
+
 n = 100
 size = 5000
 puts "Vector#each - vector of #{size} elements"
 bmbm do |x|
   v = GSLng::Vector.zero(size)
   gv = GSL::Vector.alloc(v.to_a)
-  x.report("rb-gsl each:") {n.times {s = 0; gv.each do |e| s += e end}}  
-  x.report("each       :") {n.times {s = 0; v.each do |e| s += e end}}
+  x.report("rb-gsl :") {n.times {s = 0; gv.each do |e| s += e end}}
+  x.report("GSLng  :") {n.times {s = 0; v.each do |e| s += e end}}
 end
 puts
 
@@ -77,7 +90,7 @@ end
 puts
 
 n=500
-size = 5000
+size = 50000
 puts "Vector::from_array"
 bmbm do |x|
   a = Array.new(size) { rand }
@@ -86,15 +99,15 @@ bmbm do |x|
 end
 puts
 
+puts '#################################### Matrix ####################################'
+
 n=500000
-size = 5000
-puts "Vector#[]"
+size = 50
+puts "Matrix#[] - 50 x 50"
 bmbm do |x|
-  v = GSLng::Vector.random(size)
-  gv = GSL::Vector.alloc(v.to_a)
-  i = rand(size)
-  x.report("rb-gsl :") {n.times {gv[i]}}
-  x.report("GSLng  :") {n.times {v[i]}}
+  v = GSLng::Matrix.random(size, size)
+  gv = GSL::Matrix.alloc(size, size)
+  x.report("rb-gsl :") {n.times {i,j=rand(size),rand(size); gv[i,j]}}
+  x.report("GSLng  :") {n.times {i,j=rand(size),rand(size); v[i,j]}}
 end
 puts
-
