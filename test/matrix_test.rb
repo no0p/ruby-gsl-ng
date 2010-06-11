@@ -127,4 +127,10 @@ class TestMatrix < Test::Unit::TestCase
     assert_equal(Matrix[[3],[2]], m.column_view(0))
     assert_equal(Matrix[3,2,3], m.row_view(0))
   end
+
+  def test_map
+    m = Matrix[[1,2,3],[2,3,4]]
+    assert_equal([['1.0','2.0','3.0'],['2.0','3.0','4.0']], m.map_array {|e| e.to_s})
+    assert_equal(Matrix[[2,3,4],[3,4,5]], m.map {|e| e+1})
+  end
 end

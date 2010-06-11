@@ -340,7 +340,6 @@ module GSLng
 
     #--------------------- block handling -------------------------#
 
-    # Same as {#each}, but faster. The catch is that this method returns nothing.
     # @yield [elem]
     def each(block = Proc.new)
       GSLng.backend::gsl_vector_each(self.ptr.to_i, &block)
@@ -352,7 +351,7 @@ module GSLng
       GSLng.backend::gsl_vector_each_with_index(self.ptr.to_i, &block)
     end
 
-    # Efficient {#map!} implementation.
+    # @see #map
     def map!(block = Proc.new); GSLng.backend::gsl_vector_map!(self.ptr.to_i, &block); return self end
 
     # Similar to {#map!}, but passes the index to the element instead.
@@ -360,11 +359,17 @@ module GSLng
     def map_index!(block = Proc.new); GSLng.backend::gsl_vector_map_index!(self.ptr.to_i, &block); return self end
 
     # @return [Vector]
-    # @see map_index!
+    # @see #map_index!
     # @yield [i]
     def map_index(block = Proc.new); self.dup.map_index!(block) end
 
-    alias_method :map_array, :map
+    alias_method :map_old, :map
+
+    # Acts like the normal 'map' method from Enumerator
+    # @return [Array]
+    # @see #map
+    # @yield [i]
+    def map_array(block = Proc.new); self.map_old(&block); end
 
     # @return [Vector]
     # @yield [elem]

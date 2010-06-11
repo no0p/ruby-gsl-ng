@@ -35,7 +35,9 @@ class VectorTest < Test::Unit::TestCase
 	end
 
   def test_each
-    assert_equal([1,2,4], Vector[1.1,2.1,3.8].map_array(&:round))
+    a = Vector[1.1,2.1,3.8].map_array(&:round)
+    assert_kind_of(Array, a)
+    assert_equal([1,2,4], a)
     assert_equal(Vector[1,2,4],Vector[1.1,2.1,3.8].map!(&:round))
   end
 

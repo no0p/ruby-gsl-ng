@@ -96,6 +96,21 @@ static VALUE gsl_matrix_map(VALUE self, VALUE ptr) {
   return self;
 }
 
+static VALUE gsl_matrix_map_array(VALUE self, VALUE ptr) {
+  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+
+	VALUE array = rb_ary_new2(m->size1);
+	for (size_t i = 0; i < m->size1; i++) {
+    VALUE row = rb_ary_new2(m->size2);
+    for (size_t j = 0; j < m->size2; j++) {
+      rb_ary_store(row, j, rb_yield(rb_float_new(gsl_matrix_get(m, i, j))));
+    }
+    rb_ary_store(array, i, row);
+  }
+
+	return array;
+}
+
 static VALUE gsl_matrix_map_index(VALUE self, VALUE ptr) {
   gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
   size_t size1 = m->size1;
@@ -215,6 +230,7 @@ extern "C" void Init_gslng_extensions(void) {
 
   // matrix
 	rb_define_module_function(Backend_module, "gsl_matrix_map!", (VALUE(*)(ANYARGS))gsl_matrix_map, 1);
+  rb_define_module_function(Backend_module, "gsl_matrix_map_array", (VALUE(*)(ANYARGS))gsl_matrix_map_array, 1);
 	rb_define_module_function(Backend_module, "gsl_matrix_map_index!", (VALUE(*)(ANYARGS))gsl_matrix_map_index, 1);
   rb_define_module_function(Backend_module, "gsl_matrix_map_with_index!", (VALUE(*)(ANYARGS))gsl_matrix_map_with_index, 1);
 	rb_define_module_function(Backend_module, "gsl_matrix_each_with_index", (VALUE(*)(ANYARGS))gsl_matrix_each_with_index, 1);

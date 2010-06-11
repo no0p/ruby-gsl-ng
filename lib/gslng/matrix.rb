@@ -423,6 +423,11 @@ module GSLng
     # @yield [elem]
     def map(block = Proc.new); self.dup.map!(block) end
 
+    # @see #map
+    # @return [Array]
+    # @yield [elem]
+    def map_array(block = Proc.new); GSLng.backend.gsl_matrix_map_array(self.ptr.to_i, &block) end
+
     #--------------------- conversions -------------------------#
 
     # Same as {Array#join}
