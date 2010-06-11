@@ -6,7 +6,7 @@ require 'yard'
 
 Echoe.new('ruby-gsl-ng') do |p|
   p.author = 'v01d'
-  p.summary = "Ruby Object Oriented Graph LIbrary"
+  p.summary = "Ruby/GSL new-generation wrapper"
   p.url = "http://github.com/v01d/ruby-gsl-ng"
   p.version = "0.2.3"
   p.dependencies = ['yard', 'ffi']
