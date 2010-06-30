@@ -1,6 +1,7 @@
 require 'gslng/backend'
 require 'gslng/finalizer'
 
+require 'gslng/plotter'
 require 'gslng/vector'
 require 'gslng/vector_view'
 require 'gslng/matrix'
