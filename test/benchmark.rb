@@ -10,7 +10,7 @@ include Benchmark
 puts '#################################### Vector ####################################'
 
 n=500000
-size = 5000
+size = 50000
 puts "Vector#[]"
 bmbm do |x|
   v = GSLng::Vector.random(size)
