@@ -25,20 +25,22 @@ module GSLng
     # Otherwise, the Matrix will contain garbage.
     # You can optionally pass a block, in which case {#map_index!} will be called with it (i.e.: it works like Array.new).
     def initialize(m, n, zero = false)
-      @ptr = (zero ? GSLng.backend::gsl_matrix_calloc(m, n) : GSLng.backend::gsl_matrix_alloc(m, n))
-      GSLng.define_finalizer(self, :gsl_matrix_free, @ptr)
-
+      ptr = zero ? GSLng.backend::gsl_matrix_calloc(m, n) : GSLng.backend::gsl_matrix_alloc(m, n)
+      @ptr = FFI::AutoPointer.new(ptr, Matrix.method(:release))
       @m,@n = m,n
       if (block_given?) then self.map_index!(Proc.new) end
     end
 
     def initialize_copy(other) # @private
-      ObjectSpace.undefine_finalizer(self) # TODO: ruby bug?
-      @ptr = GSLng.backend::gsl_matrix_alloc(other.m, other.n)
-      GSLng.define_finalizer(self, :gsl_matrix_free, @ptr)
+      ptr = GSLng.backend::gsl_matrix_alloc(other.m, other.n)
+      @ptr = FFI::AutoPointer.new(ptr, Matrix.method(:release))
 
       @m,@n = other.size
       GSLng.backend::gsl_matrix_memcpy(@ptr, other.ptr)
+    end
+
+    def Matrix.release(ptr) # @private
+      GSLng.backend.gsl_matrix_free(ptr)
     end
 
     # Same as Matrix.new(m, n, true)
@@ -104,17 +106,19 @@ module GSLng
     # @raise [RuntimeError] if out-of-bounds
     # @return [Numeric,Matrix] the element/sub-matrix
     def [](i, j = :*)
-      if (Symbol === i && Symbol === j) then return self
-      elsif (Symbol === i)
-        col = Vector.new(@m)
-        GSLng.backend::gsl_matrix_get_col(col.ptr, self.ptr, j)
-        return col.to_matrix
-      elsif (Symbol === j)
-        row = Vector.new(@n)
-        GSLng.backend::gsl_matrix_get_row(row.ptr, self.ptr, i)
-        return row.to_matrix
-      else
+      if (Integer === i && Integer === j)
         GSLng.backend::gsl_matrix_get(self.ptr, i, j)
+      else
+        if (Symbol === i && Symbol === j) then return self
+        elsif (Symbol === i)
+          col = Vector.new(@m)
+          GSLng.backend::gsl_matrix_get_col(col.ptr, self.ptr, j)
+          return col.to_matrix
+        elsif (Symbol === j)
+          row = Vector.new(@n)
+          GSLng.backend::gsl_matrix_get_row(row.ptr, self.ptr, i)
+          return row.to_matrix
+        end
       end
     end
 

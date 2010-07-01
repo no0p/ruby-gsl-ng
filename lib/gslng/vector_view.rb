@@ -10,9 +10,13 @@ module GSLng
       # @return [Vector,Matrix] The owner of the data this view accesses
       attr_reader :owner 
 
-      def initialize(ptr, owner, offset, size) # @private
-        @owner,@size,@ptr = owner,size,ptr
-        GSLng.define_finalizer(self, :gsl_vector_free, @ptr)
+      def initialize(ptr, owner, size) # @private
+        @owner,@size = owner,size
+        @ptr = FFI::AutoPointer.new(ptr, View.method(:release))
+      end
+
+      def View.release(ptr)
+        GSLng.backend.gsl_vector_free(ptr)
       end
       
       # Returns a Vector (*NOT* a View) copied from this view. In other words,

@@ -23,20 +23,21 @@ module GSLng
     # Otherwise, the vector will contain garbage.
     # You can optionally pass a block, in which case {#map_index!} will be called with it (i.e.: it works like {Array.new}).
     def initialize(n, zero = false)
+      ptr = (zero ? GSLng.backend::gsl_vector_calloc(n) : GSLng.backend::gsl_vector_alloc(n))
+      @ptr = FFI::AutoPointer.new(ptr, Vector.method(:release))
       @size = n
-      @ptr = (zero ? GSLng.backend::gsl_vector_calloc(n) : GSLng.backend::gsl_vector_alloc(n))
-      GSLng.define_finalizer(self, :gsl_vector_free, @ptr)
       if (block_given?) then self.map_index!(Proc.new) end
     end
 
     def initialize_copy(other) # @private
-      ObjectSpace.undefine_finalizer(self) # TODO: ruby bug?
-      
+      ptr = GSLng.backend::gsl_vector_alloc(other.size)
+      @ptr = FFI::AutoPointer.new(ptr, Vector.method(:release))
       @size = other.size
-      @ptr = GSLng.backend::gsl_vector_alloc(other.size)
-      GSLng.define_finalizer(self, :gsl_vector_free, @ptr)
-      
       GSLng.backend::gsl_vector_memcpy(@ptr, other.ptr)
+    end
+
+    def Vector.release(ptr) # @private
+      GSLng.backend.gsl_vector_free(ptr)
     end
 
     # Same as Vector.new(n, true)
@@ -230,7 +231,6 @@ module GSLng
     # @raise [RuntimeError] if out-of-bounds
     # @todo support ranges    
     def [](index)
-      #GSLng.backend::gsl_vector_get(self.ptr, (index < 0 ? @size + index : index))
       GSLng.backend.gsl_vector_get_operator(self.ptr.to_i, index)
     end
 
@@ -255,7 +255,7 @@ module GSLng
 
       if (stride == 1) then ptr = GSLng.backend::gsl_vector_subvector2(self.ptr, offset, size)
       else ptr = GSLng.backend::gsl_vector_subvector_with_stride2(self.ptr, offset, stride, size) end
-      View.new(ptr, self, offset, size)
+      View.new(ptr, self, size)
     end
     alias_method :subvector_view, :view
 
