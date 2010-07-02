@@ -62,5 +62,8 @@ module GSLng
     enum :cblas_transpose_t, [ :no_transpose, 111, :transpose, :conjugate_transpose ]
     attach_function :gsl_blas_dgemv, [ :cblas_transpose_t, :double, :pointer, :pointer, :double, :pointer ], :int
     attach_function :gsl_blas_dgemm, [ :cblas_transpose_t, :cblas_transpose_t, :double, :pointer, :pointer, :double, :pointer ], :int
+
+    # communication to gnuplot
+    attach_function :gsl_matrix_putdata, [ :pointer, :int ], :bool
   end
 end
