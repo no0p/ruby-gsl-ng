@@ -40,6 +40,12 @@ module GSLng
       if (ret != 0) then raise SystemCallError.new("Problem sending data to gnuplot", ret) end
     end
 
+    def multiplot
+      self << 'set multiplot'
+      yield(self)
+      self << 'unset multiplot'
+    end
+
     class Plot < Struct.new(:command, :matrix); end
   end
 
