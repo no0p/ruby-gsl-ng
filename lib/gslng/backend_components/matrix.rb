@@ -64,6 +64,6 @@ module GSLng
     attach_function :gsl_blas_dgemm, [ :cblas_transpose_t, :cblas_transpose_t, :double, :pointer, :pointer, :double, :pointer ], :int
 
     # communication to gnuplot
-    attach_function :gsl_matrix_putdata, [ :pointer, :int ], :bool
+    attach_function :gsl_matrix_putdata, [ :pointer, :int ], :int
   end
 end

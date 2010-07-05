@@ -16,9 +16,9 @@ module GSLng
 
     attr_reader :io
 
-    # Creates the singleton Plotter object, redirecting stdout and stderr to plotter.log.
+    # Creates the singleton Plotter object
     def initialize
-      @io = IO.popen('gnuplot &> plotter.log', 'w')
+      @io = IO.popen('gnuplot -', 'w')
       self << "set datafile nofpe_trap"
     end
 
@@ -36,7 +36,8 @@ module GSLng
     end
 
     def put_data(matrix) # @private
-      GSLng.backend.gsl_matrix_putdata(matrix.ptr, @io.to_i) or raise "Problem sending data to gnuplot"
+      ret = GSLng.backend.gsl_matrix_putdata(matrix.ptr, @io.to_i)
+      if (ret != 0) then raise SystemCallError.new("Problem sending data to gnuplot", ret) end
     end
 
     class Plot < Struct.new(:command, :matrix); end
@@ -47,7 +48,7 @@ module GSLng
     # @param [String] with The value of the 'with' option in gnuplot's plot command (i.e.: lines, linespoints, image, etc.)
     # @param [String] extra_cmds Other variables/modifiers you can optionally pass to the "plot" command
     def plot(with, extra_cmds = '')
-      Plotter.plot(define_plot(with, extra_cmds))
+      Plotter.instance.plot(define_plot(with, extra_cmds))
     end
 
     # Works the same as {#plot} but returns a {Plotter::Plot} object you can store and then pass (along with other plot objects)
