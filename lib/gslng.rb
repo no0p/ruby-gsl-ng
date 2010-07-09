@@ -1,5 +1,4 @@
 require 'gslng/backend'
-require 'gslng/finalizer'
 
 require 'gslng/plotter'
 require 'gslng/vector'
