@@ -1,3 +1,12 @@
+=== 0.2.4
+* Features:
+  * Initial plotting support (using gnuplot) (Plotter class and associated methods on Matrix).
+  * Added Matrix#map_array (just like Vector#map_array)
+  * C version of operator []
+* Internal Changes:
+  * GSL memory is managed by FFI::AutoPointer now
+* Fixes
+  * On some systems, with Ruby 1.8 the extension was missing libstdc++ support
 === 0.2.3
 * FIXES:
   * HUGE memory leak, no GSL object was ever freed.
