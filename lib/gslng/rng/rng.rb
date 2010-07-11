@@ -10,15 +10,16 @@ module GSLng
       if (@type.nil?) then @type = :mt19937 end # update comment above if changed
       
       type = GSLng.backend.send(:"gsl_rng_#{@type}")
-      @ptr = GSLng.backend.gsl_rng_alloc(type)
-      GSLng.define_finalizer(self, :gsl_rng_free, @ptr)
+      @ptr = FFI::AutoPointer.new(GSLng.backend.gsl_rng_alloc(type), RNG.method(:release))
+    end
+    
+    def self.release(ptr)
+      GSLng.backend.gsl_rng_free(ptr)
     end
 
     def initialize_copy
-      ObjectSpace.undefine_finalizer(self)
       type = GSLng.backend.send(:"gsl_rng_#{@type}")
-      @ptr = GSLng.backend.gsl_rng_alloc(type)
-      GSLng.define_finalizer(self, :gsl_rng_free, @ptr)
+      @ptr = FFI::AutoPointer.new(GSLng.backend.gsl_rng_alloc(type), RNG.method(:release))
     end
   end
 end
