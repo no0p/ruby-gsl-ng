@@ -229,7 +229,7 @@ module GSLng
     # Access the i-th element.
     # If _index_ is negative, it counts from the end (-1 is the last element).
     # @raise [RuntimeError] if out-of-bounds
-    # @todo support ranges    
+    # @todo support ranges
     def [](index)
       GSLng.backend.gsl_vector_get_operator(self.ptr.to_i, index)
     end

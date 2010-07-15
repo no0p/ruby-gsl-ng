@@ -10,7 +10,8 @@ module GSLng
   # creating a single output of all plots.
   #
   # This class works as {Singleton}, so when you instantiate it the gnuplot process is started. You can also send arbitrary commands
-  # to the gnuplot process by using the {Plotter#<<} operator.
+  # to the gnuplot process by using the {Plotter#<<} operator. Read the gnuplot documentation on what are the possible commands you can send.
+  # 
   class Plotter
     include Singleton
 
@@ -40,12 +41,15 @@ module GSLng
       if (ret != 0) then raise SystemCallError.new("Problem sending data to gnuplot", ret) end
     end
 
+    # Yields the given block enabling and disabling multiplot mode, before and after the yield respectively
     def multiplot
       self << 'set multiplot'
       yield(self)
+    ensure
       self << 'unset multiplot'
     end
 
+    # This class holds a "plot" command and the associated matrix
     class Plot < Struct.new(:command, :matrix); end
   end
 
@@ -59,6 +63,7 @@ module GSLng
 
     # Works the same as {#plot} but returns a {Plotter::Plot} object you can store and then pass (along with other plot objects)
     # to {Plotter#plot} and create a single plot out of them
+    # @return [Plot] The plot object you can pass to {Plotter#plot}
     def define_plot(with, extra_cmds = '')
       if (with == 'image')
         cmd = "'-' binary array=(#{self.m},#{self.n}) format='%double' #{extra_cmds} with #{with}"
