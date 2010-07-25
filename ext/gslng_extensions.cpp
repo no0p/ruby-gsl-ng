@@ -89,6 +89,10 @@ extern "C" gsl_vector* gsl_vector_subvector2(gsl_vector* v, size_t offset, size_
   return vector_view;
 }
 
+extern "C" double* gsl_vector_as_array(gsl_vector* v) {
+	return v->data;
+}
+
 /************************* Matrix functions *****************************/
 
 static VALUE gsl_matrix_map(VALUE self, VALUE ptr) {

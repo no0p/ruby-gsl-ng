@@ -14,7 +14,7 @@ module GSLng
   class Vector
     include Enumerable
         
-    attr_reader :size
+    attr_reader :size, :stride
     attr_reader :ptr  # @private
 
     #--------------------- constructors -------------------------#
@@ -26,6 +26,7 @@ module GSLng
       ptr = (zero ? GSLng.backend::gsl_vector_calloc(n) : GSLng.backend::gsl_vector_alloc(n))
       @ptr = FFI::AutoPointer.new(ptr, Vector.method(:release))
       @size = n
+      @stride = 1
       if (block_given?) then self.map_index!(Proc.new) end
     end
 
@@ -33,6 +34,7 @@ module GSLng
       ptr = GSLng.backend::gsl_vector_alloc(other.size)
       @ptr = FFI::AutoPointer.new(ptr, Vector.method(:release))
       @size = other.size
+      @stride = 1
       GSLng.backend::gsl_vector_memcpy(@ptr, other.ptr)
     end
 
@@ -255,7 +257,7 @@ module GSLng
 
       if (stride == 1) then ptr = GSLng.backend::gsl_vector_subvector2(self.ptr, offset, size)
       else ptr = GSLng.backend::gsl_vector_subvector_with_stride2(self.ptr, offset, stride, size) end
-      View.new(ptr, self, size)
+      View.new(ptr, self, size, stride)
     end
     alias_method :subvector_view, :view
 
@@ -338,6 +340,39 @@ module GSLng
 
     # Same as {#max}, but returns the index to the element
     def max_index; GSLng.backend::gsl_vector_max_index(self.ptr) end
+    
+    #--------------------- statistics -------------------------#
+    
+    # Compute the mean of the vector
+    def mean; GSLng.backend.gsl_stats_mean(self.as_array, self.stride, self.size) end
+    
+    # Compute the variance of the vector
+    # @param [Float] mean Optionally supply the mean if you already computed it previously with {self#mean}
+    # @param [Boolean] fixed_mean If true, the passed mean is taken to be known a priori (see GSL documentation)
+    def variance(mean = nil, fixed_mean = false)
+      if (mean.nil?) then GSLng.backend.gsl_stats_variance(self.as_array, self.stride, self.size)
+      else
+        if (fixed_mean) then GSLng.backend.gsl_stats_variance_with_fixed_mean(self.as_array, self.stride, self.size, mean)
+        else GSLng.backend.gsl_stats_variance_m(self.as_array, self.stride, self.size, mean) end
+      end
+    end
+    
+    # Compute the standard deviation of the vector
+    # @see #variance
+    def standard_deviation(mean = nil, fixed_mean = false)
+      if (mean.nil?) then GSLng.backend.gsl_stats_sd(self.as_array, self.stride, self.size)
+      else
+        if (fixed_mean) then GSLng.backend.gsl_stats_sd_with_fixed_mean(self.as_array, self.stride, self.size, mean)
+        else GSLng.backend.gsl_stats_sd_m(self.as_array, self.stride, self.size, mean) end
+      end
+    end    
+
+    # Compute the total sum of squares of the vector
+    # @see #variance
+    def total_sum_squares(mean = nil)
+      if (mean.nil?) then GSLng.backend.gsl_stats_tss(self.as_array, self.stride, self.size)
+      else GSLng.backend.gsl_stats_tss_m(self.as_array, self.stride, self.size, mean) end
+    end    
 
     #--------------------- block handling -------------------------#
 
@@ -416,6 +451,10 @@ module GSLng
     # @return [Array]
     def to_a
       GSLng.backend.gsl_vector_to_a(self.ptr.to_i)
+    end
+    
+    def as_array # @private
+      GSLng.backend.gsl_vector_as_array(self.ptr)
     end
 
     # Create a row matrix from this vector

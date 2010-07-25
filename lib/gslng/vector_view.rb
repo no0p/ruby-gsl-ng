@@ -10,8 +10,8 @@ module GSLng
       # @return [Vector,Matrix] The owner of the data this view accesses
       attr_reader :owner 
 
-      def initialize(ptr, owner, size) # @private
-        @owner,@size = owner,size
+      def initialize(ptr, owner, size, stride) # @private
+        @owner,@size,@stride = owner,size,stride
         @ptr = FFI::AutoPointer.new(ptr, View.method(:release))
       end
 

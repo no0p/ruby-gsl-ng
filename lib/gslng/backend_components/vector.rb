@@ -59,5 +59,6 @@ module GSLng
     # views
     attach_function :gsl_vector_subvector2, [ :pointer, :size_t, :size_t ], :pointer
     attach_function :gsl_vector_subvector_with_stride2, [ :pointer, :size_t, :size_t, :size_t ], :pointer
+    attach_function :gsl_vector_as_array, [ :pointer ], :pointer
   end
 end
