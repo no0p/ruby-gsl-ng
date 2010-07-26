@@ -372,9 +372,48 @@ module GSLng
     def total_sum_squares(mean = nil)
       if (mean.nil?) then GSLng.backend.gsl_stats_tss(self.as_array, self.stride, self.size)
       else GSLng.backend.gsl_stats_tss_m(self.as_array, self.stride, self.size, mean) end
-    end    
+    end
 
-    #--------------------- block handling -------------------------#
+    # Compute the absolute deviation of the vector
+    # @see #variance
+    def absolute_deviation(mean = nil)
+      if (mean.nil?) then GSLng.backend.gsl_stats_absdev(self.as_array, self.stride, self.size)
+      else GSLng.backend.gsl_stats_absdev_m(self.as_array, self.stride, self.size, mean) end
+    end
+
+    # Compute the skew of the vector. You can optionally provide the mean *and* the standard deviation if you already computed them
+    def skew(mean = nil, sd = nil)
+      if (mean.nil? || sd.nil?) then GSLng.backend.gsl_stats_skew(self.as_array, self.stride, self.size)
+      else GSLng.backend.gsl_stats_skew_sd_m(self.as_array, self.stride, self.size, mean, sd) end
+    end
+
+    # Compute the kurtosis of the vector
+    # @see #skew
+    def kurtosis(mean = nil, sd = nil)
+      if (mean.nil? || sd.nil?) then GSLng.backend.gsl_stats_kurtosis(self.as_array, self.stride, self.size)
+      else GSLng.backend.gsl_stats_kurtosis_sd_m(self.as_array, self.stride, self.size, mean, sd) end
+    end
+
+    # Compute the autocorrelation of the vector
+    # @see #variance
+    def autocorrelation(mean = nil)
+      if (mean.nil?) then GSLng.backend.gsl_stats_lag1_autocorrelation(self.as_array, self.stride, self.size)
+      else GSLng.backend.gsl_stats_lag1_autocorrelation(self.as_array, self.stride, self.size, mean) end
+    end
+
+    # Compute the covariance between self and other. You can optionally pass the mean of both vectors if you already computed them
+    # @see #variance
+    def covariance(other, mean1 = nil, mean2 = nil)
+      if (mean1.nil? || mean2.nil?) then GSLng.backend.gsl_stats_covariance(self.as_array, self.stride, other.as_array, other.stride, self.size)
+      else GSLng.backend.gsl_stats_covariance(self.as_array, self.stride, other.as_array, other.stride, self.size, mean1, mean2) end
+    end
+
+    # Compute the correlation between self and other
+    def correlation(other)
+      GSLng.backend.gsl_stats_correlation(self.as_array, self.stride, other.as_array, other.stride, self.size)
+    end
+
+    ##--------------------- block handling -------------------------#
 
     # @yield [elem]
     def each(block = Proc.new)
