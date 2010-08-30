@@ -19,7 +19,7 @@ module GSLng
     # Shorthand for [{#rows},{#columns}]
     def size; [ @m, @n ] end
 
-    #--------------------- constructors -------------------------#
+    # @group Constructors
 
     # Create a Matrix of m-by-n (rows and columns). If zero is true, the Matrix is initialized with zeros.
     # Otherwise, the Matrix will contain garbage.
@@ -81,20 +81,7 @@ module GSLng
     end
     class << self; alias_method :rand, :random end
 
-    #--------------------- setting values -------------------------#
-
-    # Set all values to _v_
-    def all!(v); GSLng.backend::gsl_matrix_set_all(self.ptr, v); return self end
-    alias_method :set!, :all!
-    alias_method :fill!, :all!
-
-    # Set all values to zero
-    def zero!; GSLng.backend::gsl_matrix_set_zero(self.ptr); return self end
-
-    # Set the identity matrix values
-    def identity; GSLng.backend::gsl_matrix_set_identity(self.ptr); return self end
-
-    #--------------------- set/get -------------------------#
+    # @group Setting/getting values
 
     # Access the element (i,j), which means (row,column).
     # Symbols :* or :all can be used as wildcards for both dimensions.
@@ -150,7 +137,18 @@ module GSLng
       return self
     end
 
-    #--------------------- view -------------------------#
+    # Set all values to _v_
+    def all!(v); GSLng.backend::gsl_matrix_set_all(self.ptr, v); return self end
+    alias_method :set!, :all!
+    alias_method :fill!, :all!
+
+    # Set all values to zero
+    def zero!; GSLng.backend::gsl_matrix_set_zero(self.ptr); return self end
+
+    # Set the identity matrix values
+    def identity; GSLng.backend::gsl_matrix_set_identity(self.ptr); return self end
+
+    # @group Views
 
     # Create a {Matrix::View} from this Matrix.
     # If either _m_ or _n_ are nil, they're computed from _x_, _y_ and the Matrix's {#size}
@@ -197,7 +195,7 @@ module GSLng
     end
 
     
-    #--------------------- operators -------------------------#
+    # @group Operators
 
     # Add other to self
     # @return [Matrix] self
@@ -290,7 +288,7 @@ module GSLng
       end
     end
 
-    #--------------------- swap rows/columns -------------------------#
+    # @group Row/column swapping
 
     # Transposes in-place. Only for square matrices
     def transpose!; GSLng.backend::gsl_matrix_transpose(self.ptr); return self end
@@ -307,7 +305,7 @@ module GSLng
     # Swap the i-th row with the j-th column. The Matrix must be square.
     def swap_rowcol(i, j); GSLng.backend::gsl_matrix_swap_rowcol(self.ptr, i, j); return self end
 
-    #--------------------- predicate methods -------------------------#
+    # @group Predicate methods
     
     # if all elements are zero
     def zero?; GSLng.backend::gsl_matrix_isnull(self.ptr) == 1 ? true : false end
@@ -324,7 +322,7 @@ module GSLng
     # If this is a column Matrix
     def column?; self.columns == 1 end
 
-    #--------------------- min/max -------------------------#
+    # @group Minimum/maximum
 
     # Maximum element of the Matrix
     def max; GSLng.backend::gsl_matrix_max(self.ptr) end
@@ -367,7 +365,7 @@ module GSLng
       return [i_max[0].get_ulong(0), j_max[0].get_ulong(0)]
     end
 
-    #--------------------- block handling -------------------------#
+    # @group High-order methods
 
     # Yields the specified block for each element going row-by-row
     # @yield [elem]
@@ -432,7 +430,7 @@ module GSLng
     # @yield [elem]
     def map_array(block = Proc.new); GSLng.backend.gsl_matrix_map_array(self.ptr.to_i, &block) end
 
-    #--------------------- conversions -------------------------#
+    # @group Type conversions
 
     # Same as {Array#join}
     # @example
@@ -488,7 +486,7 @@ module GSLng
       end
     end
 
-    #--------------------- equality -------------------------#
+    # @group Equality
 
     # Element-by-element comparison.
     def ==(other)

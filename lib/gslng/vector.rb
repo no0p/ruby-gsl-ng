@@ -17,7 +17,7 @@ module GSLng
     attr_reader :size, :stride
     attr_reader :ptr  # @private
 
-    #--------------------- constructors -------------------------#
+    # @group Constructors
     
     # Create a Vector of size n. If zero is true, the vector is initialized with zeros.
     # Otherwise, the vector will contain garbage.
@@ -70,20 +70,7 @@ module GSLng
     end
     class << self; alias_method :rand, :random end
 
-    #--------------------- setting values -------------------------#
-    
-    # Set all values to v
-    def all!(v); GSLng.backend::gsl_vector_set_all(self.ptr, v); return self end
-    alias_method :set!, :all!
-    alias_method :fill!, :all!
-    
-    # Set all values to zero
-    def zero!; GSLng.backend::gsl_vector_set_zero(self.ptr); return self end
-    
-    # Set all values to zero, except the i-th element, which is set to 1
-    def basis!(i); GSLng.backend::gsl_vector_set_basis(self.ptr, i); return self end
-
-    #--------------------- operators -------------------------#
+    # @group Operators
     
     # Add (element-by-element) other to self
     # @return [Vector] self
@@ -166,7 +153,7 @@ module GSLng
     # Invert sign on all elements
     def -@; self.map!(&:-@) end
 
-    #--------------------- other math -------------------------#
+    # @group Other mathematical operations
 
     # Dot product between self and other (uses BLAS's ddot)
     # @return [Float]
@@ -189,7 +176,7 @@ module GSLng
     # Optimized version of: self += other * alpha (where alpha is a Numeric). Uses BLAS's daxpy.
     def mul_add(other, alpha); GSLng.backend::gsl_blas_daxpy(alpha, other.ptr, self.ptr); return self end
 
-    #--------------------- misc -------------------------#
+    # @group Miscelaneous methods
     
     # Reverse the order of elements
     def reverse!; GSLng.backend::gsl_vector_reverse(self.ptr); return self end
@@ -226,7 +213,7 @@ module GSLng
       return delta
     end
 
-    #--------------------- set/get -------------------------#
+    # @group Setting/getting values
 
     # Access the i-th element.
     # If _index_ is negative, it counts from the end (-1 is the last element).
@@ -243,6 +230,8 @@ module GSLng
     def []=(index, value)
       GSLng.backend::gsl_vector_set(self.ptr, (index < 0 ? @size + index : index), value.to_f)
     end
+
+    # @group Views
 
     # Create a {Vector::View} from this Vector.
     # If _size_ is nil, it is computed automatically from _offset_ and _stride_
@@ -264,7 +253,18 @@ module GSLng
     # Shorthand for #subvector_view(..).to_vector.
     def subvector(*args); subvector_view(*args).to_vector end
 
-    #------------ utility methods for 2D,3D and 4D vectors -----------#
+    # Set all values to v
+    def all!(v); GSLng.backend::gsl_vector_set_all(self.ptr, v); return self end
+    alias_method :set!, :all!
+    alias_method :fill!, :all!
+
+    # Set all values to zero
+    def zero!; GSLng.backend::gsl_vector_set_zero(self.ptr); return self end
+
+    # Set all values to zero, except the i-th element, which is set to 1
+    def basis!(i); GSLng.backend::gsl_vector_set_basis(self.ptr, i); return self end
+
+    # @group 2D/3D/4D utility vectors
 
     # Same as Vector#[0]
     def x; GSLng.backend::gsl_vector_get(self.ptr, 0) end
@@ -284,7 +284,7 @@ module GSLng
     # Same as Vector#[3]=
     def w=(v); GSLng.backend::gsl_vector_set(self.ptr, 3, v.to_f) end 
     
-    #--------------------- predicate methods -------------------------#
+    # @group Predicate methods
 
     # if all elements are zero
     def zero?; GSLng.backend::gsl_vector_isnull(self.ptr) == 1 ? true : false end
@@ -310,7 +310,7 @@ module GSLng
     # If each element of self is less-or-equal than other's elements
     def >=(other); (self - other).nonnegative? end
 
-    #--------------------- min/max -------------------------#
+    # @group Minimum/Maximum
 
     # Return maximum element of vector
     def max; GSLng.backend::gsl_vector_max(self.ptr) end
@@ -341,7 +341,7 @@ module GSLng
     # Same as {#max}, but returns the index to the element
     def max_index; GSLng.backend::gsl_vector_max_index(self.ptr) end
     
-    #--------------------- statistics -------------------------#
+    # @group Statistics
     
     # Compute the mean of the vector
     def mean; GSLng.backend.gsl_stats_mean(self.as_array, self.stride, self.size) end
@@ -413,7 +413,7 @@ module GSLng
       GSLng.backend.gsl_stats_correlation(self.as_array, self.stride, other.as_array, other.stride, self.size)
     end
 
-    ##--------------------- block handling -------------------------#
+    # @group High-order methods
 
     # @yield [elem]
     def each(block = Proc.new)
@@ -450,7 +450,7 @@ module GSLng
     # @yield [elem]
     def map(block = Proc.new); self.dup.map!(block) end
 
-    #--------------------- conversions -------------------------#
+    # @group Type conversions
 
     # @see Array#join
     # @return [String]
@@ -514,7 +514,7 @@ module GSLng
     end
     alias_method :to_column, :transpose
 
-    #--------------------- equality -------------------------#
+    # @group Equality test
 
     # Element-by-element comparison. Admits comparing to Array.
     def ==(other)
