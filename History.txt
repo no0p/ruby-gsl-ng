@@ -1,8 +1,10 @@
 === 0.2.4
 * Features:
-  * Initial plotting support (using gnuplot) (Plotter class and associated methods on Matrix).
+  * Plotting support (using gnuplot) (Plotter class and associated methods on Matrix).
   * Added Matrix#map_array (just like Vector#map_array)
   * C version of operator []
+  * Support for some statistics operations in Vector
+  * Updated documentation to use YARD's @group feature
 * Internal Changes:
   * GSL memory is managed by FFI::AutoPointer now
 * Fixes
