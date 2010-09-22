@@ -19,7 +19,7 @@ module GSLng
 
     # Creates the singleton Plotter object
     def initialize
-      @io = IO.popen('gnuplot -', 'w')
+      @io = IO.popen('gnuplot', 'w')
       @io.sync = true
       self << "set datafile nofpe_trap"
     end
@@ -27,6 +27,7 @@ module GSLng
     # Close the pipe. It is desireable to call this in an "ensure" section, to avoid
     # leaving the child gnuplot process there if the main ruby process dies
     def close
+      Process.kill 'TERM', @io.pid
       @io.close; @io = nil      
     end
 
