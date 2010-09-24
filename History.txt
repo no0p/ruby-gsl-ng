@@ -1,3 +1,7 @@
+=== 0.2.4.1
+* Fixes:
+  * Gnuplot not being correctly executed
+  * plotting.cpp didn't compile on some systems
 === 0.2.4
 * Features:
   * Plotting support (using gnuplot) (Plotter class and associated methods on Matrix).

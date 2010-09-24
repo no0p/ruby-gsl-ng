@@ -8,7 +8,7 @@ Echoe.new('ruby-gsl-ng') do |p|
   p.author = 'v01d'
   p.summary = "Ruby/GSL new-generation wrapper"
   p.url = "http://github.com/v01d/ruby-gsl-ng"
-  p.version = "0.2.4"
+  p.version = "0.2.4.1"
   p.dependencies = ['yard', 'ffi']
 #  p.eval = proc { s.has_rdoc = 'yard' }
 end
