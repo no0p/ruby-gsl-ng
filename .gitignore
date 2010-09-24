@@ -4,7 +4,6 @@ ext/*.o
 ext/mkmf.log
 doc
 .yardoc
-Manifest
 pkg
 *.gemspec
 lib/*.so
