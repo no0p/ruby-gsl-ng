@@ -111,6 +111,15 @@ class TestMatrix < Test::Unit::TestCase
     assert_equal(Matrix[[2,3,4],[1,2,3],[3,4,5]], m.swap_rows(0,1))
     assert_equal(Matrix[[3,2,4],[2,1,3],[4,3,5]], m.swap_columns(0,1))
     assert_equal(Matrix[[3,2,4],[2,1,3],[4,3,5]], m.swap_rowcol(0,0))
+
+    m = Matrix[[1,2,3],[4,5,6],[7,8,9]]
+    assert_equal(Matrix[[0, 0, 0],[0, 1, 2],[0, 4, 5]], m.slide(1, 1))
+
+    m = Matrix[[1,2,3],[4,5,6],[7,8,9]]
+    assert_equal(Matrix[[5, 6, 0],[8, 9, 0],[0, 0, 0]], m.slide(-1, -1))
+
+    m = Matrix[[1,2,3],[4,5,6],[7,8,9]]
+    assert_equal(Matrix[[4, 5, 6],[7, 8, 9],[0, 0, 0]], m.slide(-1, 0))
   end
 
   def test_view
