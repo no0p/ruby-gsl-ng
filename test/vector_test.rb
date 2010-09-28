@@ -115,9 +115,9 @@ class VectorTest < Test::Unit::TestCase
   end
 
   def test_wrap
-    v = Vector[1,2,8]
-    assert_equal(Vector[0,0,-1],v.wrap!(0, 5))
-    assert_equal(Vector[1,2,3], v)
+    v = Vector[1,2,8,-1,11]
+    assert_equal(Vector[0,0,-1,1,-2],v.wrap!(5))
+    assert_equal(Vector[1,2,3,4,1], v)
   end
 
   def test_predicate
