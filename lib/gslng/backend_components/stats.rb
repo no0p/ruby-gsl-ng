@@ -2,6 +2,7 @@ module GSLng
   backend.instance_eval do
     # mean, sd and variance
     attach_function :gsl_stats_mean, [ :pointer, :size_t, :size_t ], :double
+    attach_function :gsl_stats_median_from_sorted_data, [ :pointer, :size_t, :size_t ], :double
     attach_function :gsl_stats_variance, [ :pointer, :size_t, :size_t ], :double
     attach_function :gsl_stats_variance_m, [ :pointer, :size_t, :size_t, :double ], :double
     attach_function :gsl_stats_sd, [ :pointer, :size_t, :size_t ], :double

@@ -346,6 +346,10 @@ module GSLng
     # Compute the mean of the vector
     def mean; @backend.gsl_stats_mean(self.as_array, self.stride, self.size) end
     
+    def median 
+      GSLng.backend.gsl_stats_median_from_sorted_data(self.sort.as_array, self.stride, self.size) 
+    end
+
     # Compute the variance of the vector
     # @param [Float] mean Optionally supply the mean if you already computed it previously with {self#mean}
     # @param [Boolean] fixed_mean If true, the passed mean is taken to be known a priori (see GSL documentation)

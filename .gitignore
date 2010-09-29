@@ -7,3 +7,5 @@ doc
 pkg
 *.gemspec
 lib/*.so
+*~
+*.swp
