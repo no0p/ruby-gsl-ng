@@ -7,6 +7,8 @@
 #include <ruby.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
+#include <iostream>
+using namespace std;
 
 /************************* Vector functions *****************************/
 
@@ -224,6 +226,22 @@ extern "C" gsl_vector* gsl_matrix_column_view(gsl_matrix* m_ptr, size_t column, 
   return vector_view;
 }
 
+extern "C" void gsl_matrix_slide(gsl_matrix* m, ssize_t slide_i, ssize_t slide_j)
+{
+  gsl_matrix* m2 = gsl_matrix_calloc(m->size1, m->size2);
+
+  for (ssize_t i = 0; (size_t)i < m->size1; i++) {
+    for (ssize_t j = 0; (size_t)j < m->size2; j++) {
+      if (i - slide_i >= 0 && (size_t)(i - slide_i) < m->size1 && j - slide_j >= 0 && (size_t)(j - slide_j) < m->size2) {
+        double v = gsl_matrix_get(m, (size_t)(i - slide_i), (size_t)(j - slide_j));
+        gsl_matrix_set(m2, (size_t)i, (size_t)j, v);
+      }            
+    }
+  }
+
+  gsl_matrix_memcpy(m, m2);
+  gsl_matrix_free(m2);
+}
 
 /************************* Module initialization *****************************/
 

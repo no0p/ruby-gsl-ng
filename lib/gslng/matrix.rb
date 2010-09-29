@@ -305,6 +305,13 @@ module GSLng
     # Swap the i-th row with the j-th column. The Matrix must be square.
     def swap_rowcol(i, j); GSLng.backend::gsl_matrix_swap_rowcol(self.ptr, i, j); return self end
 
+    # Discards rows and columns as necessary (fill them with zero), to "slide" the values of the matrix
+    # @param [Integer] i If > 0, slides all values to the bottom (adds +i+ rows of zeros at the top). If < 0,
+    #  slides all values to the top and adds zeros in the bottom.
+    # @param [Integer] j Analogous to parameter +i+, in this case a value < 0 adds zeros to the right (slides to the left),
+    #  and a value > 0 adds zeros to the left (slides to the right).
+    def slide(i, j); GSLng.backend::gsl_matrix_slide(self.ptr, i, j); return self end
+
     # @group Predicate methods
     
     # if all elements are zero

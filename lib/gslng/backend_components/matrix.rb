@@ -58,6 +58,9 @@ module GSLng
     attach_function :gsl_matrix_row_view, [ :pointer, :size_t, :size_t, :size_t ], :pointer
     attach_function :gsl_matrix_column_view, [ :pointer, :size_t, :size_t, :size_t ], :pointer
 
+    # slide
+    attach_function :gsl_matrix_slide, [ :pointer, :ssize_t, :ssize_t ], :void
+
     # BLAS interface
     enum :cblas_transpose_t, [ :no_transpose, 111, :transpose, :conjugate_transpose ]
     attach_function :gsl_blas_dgemv, [ :cblas_transpose_t, :double, :pointer, :pointer, :double, :pointer ], :int
