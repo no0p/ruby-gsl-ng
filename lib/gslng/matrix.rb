@@ -10,6 +10,7 @@ module GSLng
   class Matrix
     attr_reader :m, :n    
     attr_reader :ptr # @private
+    attr_reader :ptr_value # @private
 
     alias_method :height, :m
     alias_method :width, :n
@@ -25,22 +26,26 @@ module GSLng
     # Otherwise, the Matrix will contain garbage.
     # You can optionally pass a block, in which case {#map_index!} will be called with it (i.e.: it works like Array.new).
     def initialize(m, n, zero = false)
-      ptr = zero ? GSLng.backend::gsl_matrix_calloc(m, n) : GSLng.backend::gsl_matrix_alloc(m, n)
+      @backend = GSLng.backend
+      ptr = zero ? @backend.gsl_matrix_calloc(m, n) : @backend.gsl_matrix_alloc(m, n)
       @ptr = FFI::AutoPointer.new(ptr, Matrix.method(:release))
+      @ptr_value = @ptr.to_i
       @m,@n = m,n
       if (block_given?) then self.map_index!(Proc.new) end
     end
 
     def initialize_copy(other) # @private
-      ptr = GSLng.backend::gsl_matrix_alloc(other.m, other.n)
+      @backend = GSLng.backend
+      ptr = @backend.gsl_matrix_alloc(other.m, other.n)
       @ptr = FFI::AutoPointer.new(ptr, Matrix.method(:release))
+      @ptr_value = @ptr.to_i
 
       @m,@n = other.size
-      GSLng.backend::gsl_matrix_memcpy(@ptr, other.ptr)
+      @backend.gsl_matrix_memcpy(@ptr, other.ptr)
     end
 
     def Matrix.release(ptr) # @private
-      GSLng.backend.gsl_matrix_free(ptr)
+      @backend.gsl_matrix_free(ptr)
     end
 
     # Same as Matrix.new(m, n, true)
@@ -53,11 +58,11 @@ module GSLng
 
       if (Numeric === array[0])
         m = Matrix.new(1, array.size)
-        GSLng.backend.gsl_matrix_from_array(m.ptr.to_i, [ array ])
+        GSLng.backend.gsl_matrix_from_array(m.ptr_value, [ array ])
         return m
       elsif (Array === array[0])
         m = Matrix.new(array.size, array[0].size)
-        GSLng.backend.gsl_matrix_from_array(m.ptr.to_i, array)
+        GSLng.backend.gsl_matrix_from_array(m.ptr_value, array)
         return m
       else
         Matrix.new(array.size, array[0].to_a.size) {|i,j| array[i].to_a[j]}
@@ -94,16 +99,16 @@ module GSLng
     # @return [Numeric,Matrix] the element/sub-matrix
     def [](i, j = :*)
       if (Integer === i && Integer === j)
-        GSLng.backend::gsl_matrix_get(self.ptr, i, j)
+        @backend.gsl_matrix_get_operator(@ptr_value, i, j)
       else
         if (Symbol === i && Symbol === j) then return self
         elsif (Symbol === i)
           col = Vector.new(@m)
-          GSLng.backend::gsl_matrix_get_col(col.ptr, self.ptr, j)
+          @backend.gsl_matrix_get_col(col.ptr, @ptr, j)
           return col.to_matrix
         elsif (Symbol === j)
           row = Vector.new(@n)
-          GSLng.backend::gsl_matrix_get_row(row.ptr, self.ptr, i)
+          @backend.gsl_matrix_get_row(row.ptr, @ptr, i)
           return row.to_matrix
         end
       end
@@ -118,35 +123,35 @@ module GSLng
         if (Numeric === value) then self.fill!(value)
         else
           x,y = self.coerce(value)
-          GSLng.backend::gsl_matrix_memcpy(self.ptr, x.ptr)
+          @backend.gsl_matrix_memcpy(@ptr, x.ptr)
         end
       elsif (Symbol === i)
         col = Vector.new(@m)
         x,y = col.coerce(value)
-        GSLng.backend::gsl_matrix_set_col(self.ptr, j, x.ptr)
+        @backend.gsl_matrix_set_col(@ptr, j, x.ptr)
         return col
       elsif (Symbol === j)
         row = Vector.new(@n)
         x,y = row.coerce(value)
-        GSLng.backend::gsl_matrix_set_row(self.ptr, i, x.ptr)
+        @backend.gsl_matrix_set_row(@ptr, i, x.ptr)
         return row
       else
-        GSLng.backend::gsl_matrix_set(self.ptr, i, j, value)
+        @backend.gsl_matrix_set_operator(@ptr_value, i, j, value)
       end
 
       return self
     end
 
     # Set all values to _v_
-    def all!(v); GSLng.backend::gsl_matrix_set_all(self.ptr, v); return self end
+    def all!(v); @backend.gsl_matrix_set_all(@ptr, v); return self end
     alias_method :set!, :all!
     alias_method :fill!, :all!
 
     # Set all values to zero
-    def zero!; GSLng.backend::gsl_matrix_set_zero(self.ptr); return self end
+    def zero!; @backend.gsl_matrix_set_zero(@ptr); return self end
 
     # Set the identity matrix values
-    def identity; GSLng.backend::gsl_matrix_set_identity(self.ptr); return self end
+    def identity; @backend.gsl_matrix_set_identity(@ptr); return self end
 
     # @group Views
 
@@ -182,7 +187,7 @@ module GSLng
     # @return [Vector::View]
     def row_vecview(i, offset = 0, size = nil)
       size = (@n - offset) if size.nil?
-      ptr = GSLng.backend.gsl_matrix_row_view(self.ptr, i, offset, size)
+      ptr = @backend.gsl_matrix_row_view(@ptr, i, offset, size)
       Vector::View.new(ptr, self, size)
     end
 
@@ -190,7 +195,7 @@ module GSLng
     # @return [Vector::View]
     def column_vecview(i, offset = 0, size = nil)
       size = (@m - offset) if size.nil?
-      ptr = GSLng.backend.gsl_matrix_column_view(self.ptr, i, offset, size)
+      ptr = @backend.gsl_matrix_column_view(@ptr, i, offset, size)
       Vector::View.new(ptr, self, size)
     end
 
@@ -201,8 +206,8 @@ module GSLng
     # @return [Matrix] self
     def add!(other)
       case other
-      when Numeric; GSLng.backend::gsl_matrix_add_constant(self.ptr, other.to_f)
-      when Matrix; GSLng.backend::gsl_matrix_add(self.ptr, other.ptr)
+      when Numeric; @backend.gsl_matrix_add_constant(@ptr, other.to_f)
+      when Matrix; @backend.gsl_matrix_add(@ptr, other.ptr)
       else
         x,y = other.coerce(self)
         x.add!(y)
@@ -214,8 +219,8 @@ module GSLng
     # @return [Matrix] self    
     def substract!(other)
       case other
-      when Numeric; GSLng.backend::gsl_matrix_add_constant(self.ptr, -other.to_f)
-      when Matrix; GSLng.backend::gsl_matrix_sub(self.ptr, other.ptr)
+      when Numeric; @backend.gsl_matrix_add_constant(@ptr, -other.to_f)
+      when Matrix; @backend.gsl_matrix_sub(@ptr, other.ptr)
       else
         x,y = other.coerce(self)
         x.substract!(y)
@@ -228,8 +233,8 @@ module GSLng
     # @return [Matrix] self    
     def multiply!(other)
       case other
-      when Numeric; GSLng.backend::gsl_matrix_scale(self.ptr, other.to_f)
-      when Matrix; GSLng.backend::gsl_matrix_mul_elements(self.ptr, other.ptr)
+      when Numeric; @backend.gsl_matrix_scale(@ptr, other.to_f)
+      when Matrix; @backend.gsl_matrix_mul_elements(@ptr, other.ptr)
       else
         x,y = other.coerce(self)
         x.multiply!(y)
@@ -242,8 +247,8 @@ module GSLng
     # @return [Matrix] self    
     def divide!(other)
       case other
-      when Numeric; GSLng.backend::gsl_matrix_scale(self.ptr, 1.0 / other)
-      when Matrix;  GSLng.backend::gsl_matrix_div_elements(self.ptr, other.ptr)
+      when Numeric; @backend.gsl_matrix_scale(@ptr, 1.0 / other)
+      when Matrix;  @backend.gsl_matrix_div_elements(@ptr, other.ptr)
       else
         x,y = other.coerce(self)
         x.divide!(y)
@@ -276,11 +281,11 @@ module GSLng
         self.multiply(other)
       when Vector
         matrix = Matrix.new(self.m, other.size)
-        GSLng.backend::gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.to_matrix.ptr, 0, matrix.ptr)
+        @backend.gsl_blas_dgemm(:no_transpose, :no_transpose, 1, @ptr, other.to_matrix.ptr, 0, matrix.ptr)
         return matrix
       when Matrix
         matrix = Matrix.new(self.m, other.n)
-        GSLng.backend::gsl_blas_dgemm(:no_transpose, :no_transpose, 1, self.ptr, other.ptr, 0, matrix.ptr)
+        @backend.gsl_blas_dgemm(:no_transpose, :no_transpose, 1, @ptr, other.ptr, 0, matrix.ptr)
         return matrix
       else
         x,y = other.coerce(self)
@@ -291,40 +296,40 @@ module GSLng
     # @group Row/column swapping
 
     # Transposes in-place. Only for square matrices
-    def transpose!; GSLng.backend::gsl_matrix_transpose(self.ptr); return self end
+    def transpose!; @backend.gsl_matrix_transpose(@ptr); return self end
 
     # Returns the transpose of self, in a new matrix
-    def transpose; matrix = Matrix.new(@n, @m); GSLng.backend::gsl_matrix_transpose_memcpy(matrix.ptr, self.ptr); return matrix end
+    def transpose; matrix = Matrix.new(@n, @m); @backend.gsl_matrix_transpose_memcpy(matrix.ptr, @ptr); return matrix end
 
     # Swap the i-th and j-th columnos
-    def swap_columns(i, j); GSLng.backend::gsl_matrix_swap_columns(self.ptr, i, j); return self end
+    def swap_columns(i, j); @backend.gsl_matrix_swap_columns(@ptr, i, j); return self end
     
     # Swap the i-th and j-th rows
-    def swap_rows(i, j); GSLng.backend::gsl_matrix_swap_rows(self.ptr, i, j); return self end
+    def swap_rows(i, j); @backend.gsl_matrix_swap_rows(@ptr, i, j); return self end
     
     # Swap the i-th row with the j-th column. The Matrix must be square.
-    def swap_rowcol(i, j); GSLng.backend::gsl_matrix_swap_rowcol(self.ptr, i, j); return self end
+    def swap_rowcol(i, j); @backend.gsl_matrix_swap_rowcol(@ptr, i, j); return self end
 
     # Discards rows and columns as necessary (fill them with zero), to "slide" the values of the matrix
     # @param [Integer] i If > 0, slides all values to the bottom (adds +i+ rows of zeros at the top). If < 0,
     #  slides all values to the top and adds zeros in the bottom.
     # @param [Integer] j Analogous to parameter +i+, in this case a value < 0 adds zeros to the right (slides to the left),
     #  and a value > 0 adds zeros to the left (slides to the right).
-    def slide(i, j); GSLng.backend::gsl_matrix_slide(self.ptr, i, j); return self end
+    def slide(i, j); @backend.gsl_matrix_slide(@ptr, i, j); return self end
 
     # @group Predicate methods
     
     # if all elements are zero
-    def zero?; GSLng.backend::gsl_matrix_isnull(self.ptr) == 1 ? true : false end
+    def zero?; @backend.gsl_matrix_isnull(@ptr) == 1 ? true : false end
 
     # if all elements are strictly positive (>0)
-    def positive?; GSLng.backend::gsl_matrix_ispos(self.ptr) == 1 ? true : false end
+    def positive?; @backend.gsl_matrix_ispos(@ptr) == 1 ? true : false end
 
     #if all elements are strictly negative (<0)
-    def negative?; GSLng.backend::gsl_matrix_isneg(self.ptr) == 1 ? true : false end
+    def negative?; @backend.gsl_matrix_isneg(@ptr) == 1 ? true : false end
     
     # if all elements are non-negative (>=0)
-    def nonnegative?; GSLng.backend::gsl_matrix_isnonneg(self.ptr) == 1 ? true : false end
+    def nonnegative?; @backend.gsl_matrix_isnonneg(@ptr) == 1 ? true : false end
 
     # If this is a column Matrix
     def column?; self.columns == 1 end
@@ -332,16 +337,16 @@ module GSLng
     # @group Minimum/maximum
 
     # Maximum element of the Matrix
-    def max; GSLng.backend::gsl_matrix_max(self.ptr) end
+    def max; @backend.gsl_matrix_max(@ptr) end
 
     # Minimum element of the Matrix
-    def min; GSLng.backend::gsl_matrix_min(self.ptr) end
+    def min; @backend.gsl_matrix_min(@ptr) end
 
     # Same as {Array#minmax}
     def minmax
       min = FFI::Buffer.new(:double)
       max = FFI::Buffer.new(:double)
-      GSLng.backend::gsl_matrix_minmax(self.ptr, min, max)
+      @backend.gsl_matrix_minmax(@ptr, min, max)
       return [min[0].get_float64(0),max[0].get_float64(0)]
     end
 
@@ -351,7 +356,7 @@ module GSLng
       j_min = FFI::Buffer.new(:size_t)
       i_max = FFI::Buffer.new(:size_t)
       j_max = FFI::Buffer.new(:size_t)
-      GSLng.backend::gsl_matrix_minmax_index(self.ptr, i_min, j_min, i_max, j_max)
+      @backend.gsl_matrix_minmax_index(@ptr, i_min, j_min, i_max, j_max)
       #return [min[0].get_size_t(0),max[0].get_size_t(0)]
       return [i_min[0].get_ulong(0),j_min[0].get_ulong(0),i_max[0].get_ulong(0),j_max[0].get_ulong(0)]
     end
@@ -360,7 +365,7 @@ module GSLng
     def min_index
       i_min = FFI::Buffer.new(:size_t)
       j_min = FFI::Buffer.new(:size_t)
-      GSLng.backend::gsl_matrix_min_index(self.ptr, i_min, j_min)
+      @backend.gsl_matrix_min_index(@ptr, i_min, j_min)
       return [i_min[0].get_ulong(0), j_min[0].get_ulong(0)]
     end
 
@@ -368,7 +373,7 @@ module GSLng
     def max_index
       i_max = FFI::Buffer.new(:size_t)
       j_max = FFI::Buffer.new(:size_t)
-      GSLng.backend::gsl_matrix_max_index(self.ptr, i_max, j_max)
+      @backend.gsl_matrix_max_index(@ptr, i_max, j_max)
       return [i_max[0].get_ulong(0), j_max[0].get_ulong(0)]
     end
 
@@ -390,13 +395,13 @@ module GSLng
     # @yield [elem]
     # @return [void]
     def each(block = Proc.new) 
-      GSLng.backend::gsl_matrix_each(self.ptr.to_i, &block)
+      @backend.gsl_matrix_each(@ptr_value, &block)
     end
     
     # @see #each
     # @yield [elem,i,j]
     def each_with_index(block = Proc.new) 
-      GSLng.backend::gsl_matrix_each_with_index(self.ptr.to_i, &block)
+      @backend.gsl_matrix_each_with_index(@ptr_value, &block)
     end    
 
     # Yields the block for each row *view* ({Matrix::View}).
@@ -417,15 +422,15 @@ module GSLng
 
     # Efficient {#map!} implementation
     # @yield [elem]
-    def map!(block = Proc.new); GSLng.backend::gsl_matrix_map!(self.ptr.to_i, &block); return self end
+    def map!(block = Proc.new); @backend.gsl_matrix_map!(@ptr_value, &block); return self end
 
     # Alternate version of {#map!}, in this case the block receives the index (row, column) as a parameter.
     # @yield [i,j]
-    def map_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_index!(self.ptr.to_i, &block); return self end
+    def map_index!(block = Proc.new); @backend.gsl_matrix_map_index!(@ptr_value, &block); return self end
 
     # Similar to {#map_index!}, in this case it receives both the element and the index to it
     # @yield [elem,i,j]
-    def map_with_index!(block = Proc.new); GSLng.backend::gsl_matrix_map_with_index!(self.ptr.to_i, &block); return self end
+    def map_with_index!(block = Proc.new); @backend.gsl_matrix_map_with_index!(@ptr_value, &block); return self end
 
     # @see #map!
     # @return [Matrix]
@@ -435,7 +440,7 @@ module GSLng
     # @see #map
     # @return [Array]
     # @yield [elem]
-    def map_array(block = Proc.new); GSLng.backend.gsl_matrix_map_array(self.ptr.to_i, &block) end
+    def map_array(block = Proc.new); @backend.gsl_matrix_map_array(@ptr_value, &block) end
 
     # @group Type conversions
 
@@ -470,7 +475,7 @@ module GSLng
     # @example
     #  Matrix[[1,2],[2,3]] => [[1.0,2.0],[2.0,3.0]]
     def to_a
-      GSLng.backend.gsl_matrix_to_a(self.ptr.to_i)
+      @backend.gsl_matrix_to_a(@ptr_value)
     end
 
     def inspect # @private

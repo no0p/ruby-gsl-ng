@@ -14,8 +14,10 @@ module GSLng
         @owner = owner
         @m,@n = m,n
 
+        @backend = GSLng.backend
         ptr = GSLng.backend::gsl_matrix_submatrix2(owner.ptr, x, y, m, n)
         @ptr = FFI::AutoPointer.new(ptr, View.method(:release))
+        @ptr_value = @ptr.to_i
       end
 
       def View.release(ptr)

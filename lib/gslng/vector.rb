@@ -16,6 +16,7 @@ module GSLng
         
     attr_reader :size, :stride
     attr_reader :ptr  # @private
+    attr_reader :ptr_value # @private
 
     # @group Constructors
     
@@ -23,19 +24,23 @@ module GSLng
     # Otherwise, the vector will contain garbage.
     # You can optionally pass a block, in which case {#map_index!} will be called with it (i.e.: it works like {Array.new}).
     def initialize(n, zero = false)
-      ptr = (zero ? GSLng.backend::gsl_vector_calloc(n) : GSLng.backend::gsl_vector_alloc(n))
+      @backend = GSLng.backend
+      ptr = (zero ? @backend.gsl_vector_calloc(n) : @backend.gsl_vector_alloc(n))
       @ptr = FFI::AutoPointer.new(ptr, Vector.method(:release))
+      @ptr_value = @ptr.to_i
       @size = n
       @stride = 1
       if (block_given?) then self.map_index!(Proc.new) end
     end
 
     def initialize_copy(other) # @private
-      ptr = GSLng.backend::gsl_vector_alloc(other.size)
+      @backend = GSLng.backend
+      ptr = @backend.gsl_vector_alloc(other.size)
       @ptr = FFI::AutoPointer.new(ptr, Vector.method(:release))
+      @ptr_value = @ptr.to_i
       @size = other.size
       @stride = 1
-      GSLng.backend::gsl_vector_memcpy(@ptr, other.ptr)
+      @backend.gsl_vector_memcpy(@ptr, other.ptr)
     end
 
     def Vector.release(ptr) # @private
@@ -49,7 +54,7 @@ module GSLng
     def Vector.from_array(array)
       if (array.empty?) then raise "Can't create empty vector" end
       v = Vector.new(array.size)
-      GSLng.backend.gsl_vector_from_array(v.ptr.to_i, array)
+      GSLng.backend.gsl_vector_from_array(v.ptr_value, array)
       return v
     end
 
@@ -76,8 +81,8 @@ module GSLng
     # @return [Vector] self
     def add!(other)
       case other
-      when Numeric; GSLng.backend::gsl_vector_add_constant(self.ptr, other.to_f)
-      when Vector; GSLng.backend::gsl_vector_add(self.ptr, other.ptr)
+      when Numeric; @backend.gsl_vector_add_constant(@ptr, other.to_f)
+      when Vector; @backend.gsl_vector_add(@ptr, other.ptr)
       else
         x,y = other.coerce(self)
         x.add!(y)
@@ -89,8 +94,8 @@ module GSLng
     # @return [Vector] self    
     def substract!(other)
       case other
-      when Numeric; GSLng.backend::gsl_vector_add_constant(self.ptr, -other.to_f)
-      when Vector; GSLng.backend::gsl_vector_sub(self.ptr, other.ptr)
+      when Numeric; @backend.gsl_vector_add_constant(@ptr, -other.to_f)
+      when Vector; @backend.gsl_vector_sub(@ptr, other.ptr)
       else
         x,y = other.coerce(self)
         x.sub!(y)
@@ -103,8 +108,8 @@ module GSLng
     # @return [Vector] self
     def multiply!(other)
       case other
-      when Numeric; GSLng.backend::gsl_blas_dscal(other.to_f, self.ptr)
-      when Vector; GSLng.backend::gsl_vector_mul(self.ptr, other.ptr)
+      when Numeric; @backend.gsl_blas_dscal(other.to_f, @ptr)
+      when Vector; @backend.gsl_vector_mul(@ptr, other.ptr)
       else
         x,y = other.coerce(self)
         x.mul!(y)
@@ -117,8 +122,8 @@ module GSLng
     # @return [Vector] self
     def divide!(other)
       case other
-      when Numeric; GSLng.backend::gsl_blas_dscal(1.0 / other, self.ptr)
-      when Vector;  GSLng.backend::gsl_vector_div(self.ptr, other.ptr)
+      when Numeric; @backend.gsl_blas_dscal(1.0 / other, @ptr)
+      when Vector;  @backend.gsl_vector_div(@ptr, other.ptr)
       else
         x,y = other.coerce(self)
         x.div!(y)
@@ -161,34 +166,34 @@ module GSLng
     #  Vector[1,2,3] ^ Vector[0,1,2] => 8.0
     def dot(other)
       out = FFI::Buffer.new(:double)
-      GSLng.backend::gsl_blas_ddot(self.ptr, other.ptr, out)
+      @backend.gsl_blas_ddot(@ptr, other.ptr, out)
       return out[0].get_double(0)
     end
     alias_method :^, :dot
     
     # Norm 2 of the vector (uses BLAS's dnrm2)
-    def norm; GSLng.backend::gsl_blas_dnrm2(self.ptr) end
+    def norm; @backend.gsl_blas_dnrm2(@ptr) end
     alias_method :length, :norm
 
     # Returns the sum of all elements (uses BLAS's dasum)
-    def sum; GSLng.backend::gsl_blas_dasum(self.ptr) end
+    def sum; @backend.gsl_blas_dasum(@ptr) end
 
     # Optimized version of: self += other * alpha (where alpha is a Numeric). Uses BLAS's daxpy.
-    def mul_add(other, alpha); GSLng.backend::gsl_blas_daxpy(alpha, other.ptr, self.ptr); return self end
+    def mul_add(other, alpha); @backend.gsl_blas_daxpy(alpha, other.ptr, @ptr); return self end
 
     # @group Miscelaneous methods
     
     # Reverse the order of elements
-    def reverse!; GSLng.backend::gsl_vector_reverse(self.ptr); return self end
+    def reverse!; @backend.gsl_vector_reverse(@ptr); return self end
     
     # Swap the i-th element with the j-th element
-    def swap(i,j); GSLng.backend::gsl_vector_swap_elements(self.ptr, i, j); return self end
+    def swap(i,j); @backend.gsl_vector_swap_elements(@ptr, i, j); return self end
 
-    def sort!; GSLng.backend::gsl_sort_vector(self.ptr); return self end
+    def sort!; @backend.gsl_sort_vector(@ptr); return self end
     def sort; self.dup.sort! end
 
     # Copy other's values into self
-    def copy(other); GSLng.backend::gsl_vector_memcpy(self.ptr, other.ptr); return self end
+    def copy(other); @backend.gsl_vector_memcpy(@ptr, other.ptr); return self end
 
     # Wraps self into the interval [0,up_to). NOTE: this value must be > 0
     # @param [Vector,Numeric] up_to
@@ -214,7 +219,7 @@ module GSLng
     # @raise [RuntimeError] if out-of-bounds
     # @todo support ranges
     def [](index)
-      GSLng.backend.gsl_vector_get_operator(self.ptr.to_i, index)
+      @backend.gsl_vector_get_operator(@ptr_value, index)
     end
 
     # Set the i-th element.
@@ -222,7 +227,8 @@ module GSLng
     # @raise [RuntimeError] if out-of-bounds
     # @todo support ranges    
     def []=(index, value)
-      GSLng.backend::gsl_vector_set(self.ptr, (index < 0 ? @size + index : index), value.to_f)
+      @backend.gsl_vector_set_operator(@ptr_value, index, value.to_f)
+      #@backend.gsl_vector_set(@ptr, (index < 0 ? @size + index : index), value.to_f)
     end
 
     # @group Views
@@ -238,8 +244,8 @@ module GSLng
         size = k + (m == 0 ? 0 : 1)
       end
 
-      if (stride == 1) then ptr = GSLng.backend::gsl_vector_subvector2(self.ptr, offset, size)
-      else ptr = GSLng.backend::gsl_vector_subvector_with_stride2(self.ptr, offset, stride, size) end
+      if (stride == 1) then ptr = @backend.gsl_vector_subvector2(@ptr, offset, size)
+      else ptr = @backend.gsl_vector_subvector_with_stride2(@ptr, offset, stride, size) end
       View.new(ptr, self, size, stride)
     end
     alias_method :subvector_view, :view
@@ -248,49 +254,49 @@ module GSLng
     def subvector(*args); subvector_view(*args).to_vector end
 
     # Set all values to v
-    def all!(v); GSLng.backend::gsl_vector_set_all(self.ptr, v); return self end
+    def all!(v); @backend.gsl_vector_set_all(@ptr, v); return self end
     alias_method :set!, :all!
     alias_method :fill!, :all!
 
     # Set all values to zero
-    def zero!; GSLng.backend::gsl_vector_set_zero(self.ptr); return self end
+    def zero!; @backend.gsl_vector_set_zero(@ptr); return self end
 
     # Set all values to zero, except the i-th element, which is set to 1
-    def basis!(i); GSLng.backend::gsl_vector_set_basis(self.ptr, i); return self end
+    def basis!(i); @backend.gsl_vector_set_basis(@ptr, i); return self end
 
     # @group 2D/3D/4D utility vectors
 
     # Same as Vector#[0]
-    def x; GSLng.backend::gsl_vector_get(self.ptr, 0) end
+    def x; @backend.gsl_vector_get(@ptr, 0) end
     # Same as Vector#[1]
-    def y; GSLng.backend::gsl_vector_get(self.ptr, 1) end
+    def y; @backend.gsl_vector_get(@ptr, 1) end
     # Same as Vector#[2]
-    def z; GSLng.backend::gsl_vector_get(self.ptr, 2) end 
+    def z; @backend.gsl_vector_get(@ptr, 2) end
     # Same as Vector#[3]
-    def w; GSLng.backend::gsl_vector_get(self.ptr, 3) end 
+    def w; @backend.gsl_vector_get(@ptr, 3) end
 
     # Same as Vector#[0]=
-    def x=(v); GSLng.backend::gsl_vector_set(self.ptr, 0, v.to_f) end
+    def x=(v); @backend.gsl_vector_set(@ptr, 0, v.to_f) end
     # Same as Vector#[1]=
-    def y=(v); GSLng.backend::gsl_vector_set(self.ptr, 1, v.to_f) end
+    def y=(v); @backend.gsl_vector_set(@ptr, 1, v.to_f) end
     # Same as Vector#[2]=
-    def z=(v); GSLng.backend::gsl_vector_set(self.ptr, 2, v.to_f) end
+    def z=(v); @backend.gsl_vector_set(@ptr, 2, v.to_f) end
     # Same as Vector#[3]=
-    def w=(v); GSLng.backend::gsl_vector_set(self.ptr, 3, v.to_f) end 
+    def w=(v); @backend.gsl_vector_set(@ptr, 3, v.to_f) end
     
     # @group Predicate methods
 
     # if all elements are zero
-    def zero?; GSLng.backend::gsl_vector_isnull(self.ptr) == 1 ? true : false end
+    def zero?; @backend.gsl_vector_isnull(@ptr) == 1 ? true : false end
 
     # if all elements are strictly positive (>0)
-    def positive?; GSLng.backend::gsl_vector_ispos(self.ptr) == 1 ? true : false end
+    def positive?; @backend.gsl_vector_ispos(@ptr) == 1 ? true : false end
 
     #if all elements are strictly negative (<0)
-    def negative?; GSLng.backend::gsl_vector_isneg(self.ptr) == 1 ? true : false end
+    def negative?; @backend.gsl_vector_isneg(@ptr) == 1 ? true : false end
     
     # if all elements are non-negative (>=0)
-    def nonnegative?; GSLng.backend::gsl_vector_isnonneg(self.ptr) == 1 ? true : false end
+    def nonnegative?; @backend.gsl_vector_isnonneg(@ptr) == 1 ? true : false end
 
     # If each element of self is less than other's elements
     def <(other); (other - self).positive? end
@@ -307,16 +313,16 @@ module GSLng
     # @group Minimum/Maximum
 
     # Return maximum element of vector
-    def max; GSLng.backend::gsl_vector_max(self.ptr) end
+    def max; @backend.gsl_vector_max(@ptr) end
     
     # Return minimum element of vector
-    def min; GSLng.backend::gsl_vector_min(self.ptr) end
+    def min; @backend.gsl_vector_min(@ptr) end
 
     # Same as {Array#minmax}
     def minmax
       min = FFI::Buffer.new(:double)
       max = FFI::Buffer.new(:double)
-      GSLng.backend::gsl_vector_minmax(self.ptr, min, max)
+      @backend.gsl_vector_minmax(@ptr, min, max)
       return [min[0].get_float64(0),max[0].get_float64(0)]
     end
 
@@ -324,108 +330,108 @@ module GSLng
     def minmax_index
       min = FFI::Buffer.new(:size_t)
       max = FFI::Buffer.new(:size_t)
-      GSLng.backend::gsl_vector_minmax_index(self.ptr, min, max)
+      @backend.gsl_vector_minmax_index(@ptr, min, max)
       #return [min[0].get_size_t(0),max[0].get_size_t(0)]
       return [min[0].get_ulong(0),max[0].get_ulong(0)]
     end
     
     # Same as {#min}, but returns the index to the element
-    def min_index; GSLng.backend::gsl_vector_min_index(self.ptr) end
+    def min_index; @backend.gsl_vector_min_index(@ptr) end
 
     # Same as {#max}, but returns the index to the element
-    def max_index; GSLng.backend::gsl_vector_max_index(self.ptr) end
+    def max_index; @backend.gsl_vector_max_index(@ptr) end
     
     # @group Statistics
     
     # Compute the mean of the vector
-    def mean; GSLng.backend.gsl_stats_mean(self.as_array, self.stride, self.size) end
+    def mean; @backend.gsl_stats_mean(self.as_array, self.stride, self.size) end
     
     # Compute the variance of the vector
     # @param [Float] mean Optionally supply the mean if you already computed it previously with {self#mean}
     # @param [Boolean] fixed_mean If true, the passed mean is taken to be known a priori (see GSL documentation)
     def variance(mean = nil, fixed_mean = false)
-      if (mean.nil?) then GSLng.backend.gsl_stats_variance(self.as_array, self.stride, self.size)
+      if (mean.nil?) then @backend.gsl_stats_variance(self.as_array, self.stride, self.size)
       else
-        if (fixed_mean) then GSLng.backend.gsl_stats_variance_with_fixed_mean(self.as_array, self.stride, self.size, mean)
-        else GSLng.backend.gsl_stats_variance_m(self.as_array, self.stride, self.size, mean) end
+        if (fixed_mean) then @backend.gsl_stats_variance_with_fixed_mean(self.as_array, self.stride, self.size, mean)
+        else @backend.gsl_stats_variance_m(self.as_array, self.stride, self.size, mean) end
       end
     end
     
     # Compute the standard deviation of the vector
     # @see #variance
     def standard_deviation(mean = nil, fixed_mean = false)
-      if (mean.nil?) then GSLng.backend.gsl_stats_sd(self.as_array, self.stride, self.size)
+      if (mean.nil?) then @backend.gsl_stats_sd(self.as_array, self.stride, self.size)
       else
-        if (fixed_mean) then GSLng.backend.gsl_stats_sd_with_fixed_mean(self.as_array, self.stride, self.size, mean)
-        else GSLng.backend.gsl_stats_sd_m(self.as_array, self.stride, self.size, mean) end
+        if (fixed_mean) then @backend.gsl_stats_sd_with_fixed_mean(self.as_array, self.stride, self.size, mean)
+        else @backend.gsl_stats_sd_m(self.as_array, self.stride, self.size, mean) end
       end
     end    
 
     # Compute the total sum of squares of the vector
     # @see #variance
     def total_sum_squares(mean = nil)
-      if (mean.nil?) then GSLng.backend.gsl_stats_tss(self.as_array, self.stride, self.size)
-      else GSLng.backend.gsl_stats_tss_m(self.as_array, self.stride, self.size, mean) end
+      if (mean.nil?) then @backend.gsl_stats_tss(self.as_array, self.stride, self.size)
+      else @backend.gsl_stats_tss_m(self.as_array, self.stride, self.size, mean) end
     end
 
     # Compute the absolute deviation of the vector
     # @see #variance
     def absolute_deviation(mean = nil)
-      if (mean.nil?) then GSLng.backend.gsl_stats_absdev(self.as_array, self.stride, self.size)
-      else GSLng.backend.gsl_stats_absdev_m(self.as_array, self.stride, self.size, mean) end
+      if (mean.nil?) then @backend.gsl_stats_absdev(self.as_array, self.stride, self.size)
+      else @backend.gsl_stats_absdev_m(self.as_array, self.stride, self.size, mean) end
     end
 
     # Compute the skew of the vector. You can optionally provide the mean *and* the standard deviation if you already computed them
     def skew(mean = nil, sd = nil)
-      if (mean.nil? || sd.nil?) then GSLng.backend.gsl_stats_skew(self.as_array, self.stride, self.size)
-      else GSLng.backend.gsl_stats_skew_sd_m(self.as_array, self.stride, self.size, mean, sd) end
+      if (mean.nil? || sd.nil?) then @backend.gsl_stats_skew(self.as_array, self.stride, self.size)
+      else @backend.gsl_stats_skew_sd_m(self.as_array, self.stride, self.size, mean, sd) end
     end
 
     # Compute the kurtosis of the vector
     # @see #skew
     def kurtosis(mean = nil, sd = nil)
-      if (mean.nil? || sd.nil?) then GSLng.backend.gsl_stats_kurtosis(self.as_array, self.stride, self.size)
-      else GSLng.backend.gsl_stats_kurtosis_sd_m(self.as_array, self.stride, self.size, mean, sd) end
+      if (mean.nil? || sd.nil?) then @backend.gsl_stats_kurtosis(self.as_array, self.stride, self.size)
+      else @backend.gsl_stats_kurtosis_sd_m(self.as_array, self.stride, self.size, mean, sd) end
     end
 
     # Compute the autocorrelation of the vector
     # @see #variance
     def autocorrelation(mean = nil)
-      if (mean.nil?) then GSLng.backend.gsl_stats_lag1_autocorrelation(self.as_array, self.stride, self.size)
-      else GSLng.backend.gsl_stats_lag1_autocorrelation(self.as_array, self.stride, self.size, mean) end
+      if (mean.nil?) then @backend.gsl_stats_lag1_autocorrelation(self.as_array, self.stride, self.size)
+      else @backend.gsl_stats_lag1_autocorrelation(self.as_array, self.stride, self.size, mean) end
     end
 
     # Compute the covariance between self and other. You can optionally pass the mean of both vectors if you already computed them
     # @see #variance
     def covariance(other, mean1 = nil, mean2 = nil)
-      if (mean1.nil? || mean2.nil?) then GSLng.backend.gsl_stats_covariance(self.as_array, self.stride, other.as_array, other.stride, self.size)
-      else GSLng.backend.gsl_stats_covariance(self.as_array, self.stride, other.as_array, other.stride, self.size, mean1, mean2) end
+      if (mean1.nil? || mean2.nil?) then @backend.gsl_stats_covariance(self.as_array, self.stride, other.as_array, other.stride, self.size)
+      else @backend.gsl_stats_covariance(self.as_array, self.stride, other.as_array, other.stride, self.size, mean1, mean2) end
     end
 
     # Compute the correlation between self and other
     def correlation(other)
-      GSLng.backend.gsl_stats_correlation(self.as_array, self.stride, other.as_array, other.stride, self.size)
+      @backend.gsl_stats_correlation(self.as_array, self.stride, other.as_array, other.stride, self.size)
     end
 
     # @group High-order methods
 
     # @yield [elem]
     def each(block = Proc.new)
-      GSLng.backend::gsl_vector_each(self.ptr.to_i, &block)
+      @backend.gsl_vector_each(@ptr_value, &block)
     end
 
     # @see #each
     # @yield [elem,i]
     def each_with_index(block = Proc.new)
-      GSLng.backend::gsl_vector_each_with_index(self.ptr.to_i, &block)
+      @backend.gsl_vector_each_with_index(@ptr_value, &block)
     end
 
     # @see #map
-    def map!(block = Proc.new); GSLng.backend::gsl_vector_map!(self.ptr.to_i, &block); return self end
+    def map!(block = Proc.new); @backend.gsl_vector_map!(@ptr_value, &block); return self end
 
     # Similar to {#map!}, but passes the index to the element instead.
     # @yield [i]
-    def map_index!(block = Proc.new); GSLng.backend::gsl_vector_map_index!(self.ptr.to_i, &block); return self end
+    def map_index!(block = Proc.new); @backend.gsl_vector_map_index!(@ptr_value, &block); return self end
 
     # @return [Vector]
     # @see #map_index!
@@ -483,18 +489,18 @@ module GSLng
 
     # @return [Array]
     def to_a
-      GSLng.backend.gsl_vector_to_a(self.ptr.to_i)
+      @backend.gsl_vector_to_a(@ptr_value)
     end
     
     def as_array # @private
-      GSLng.backend.gsl_vector_as_array(self.ptr)
+      @backend.gsl_vector_as_array(@ptr)
     end
 
     # Create a row matrix from this vector
     # @return [Matrix]
     def to_matrix
       m = Matrix.new(1, @size)
-      GSLng.backend::gsl_matrix_set_row(m.ptr, 0, self.ptr)
+      @backend.gsl_matrix_set_row(m.ptr, 0, @ptr)
       return m
     end
     alias_method :to_row, :to_matrix
@@ -503,7 +509,7 @@ module GSLng
     # @return [Matrix]
     def transpose
       m = Matrix.new(@size, 1)
-      GSLng.backend::gsl_matrix_set_col(m.ptr, 0, self.ptr)
+      @backend.gsl_matrix_set_col(m.ptr, 0, @ptr)
       return m
     end
     alias_method :to_column, :transpose

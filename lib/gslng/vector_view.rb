@@ -11,8 +11,10 @@ module GSLng
       attr_reader :owner 
 
       def initialize(ptr, owner, size, stride = 1) # @private
+        @backend = GSLng.backend
         @owner,@size,@stride = owner,size,stride
         @ptr = FFI::AutoPointer.new(ptr, View.method(:release))
+        @ptr_value = @ptr.to_i
       end
 
       def View.release(ptr)
@@ -24,7 +26,7 @@ module GSLng
       # @return [Vector]
       def dup
         v = Vector.new(@size)
-        GSLng.backend::gsl_vector_memcpy(v.ptr, @ptr)
+        @backend.gsl_vector_memcpy(v.ptr, @ptr)
         return v
       end
       alias_method :clone, :dup

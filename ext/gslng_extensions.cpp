@@ -75,6 +75,14 @@ static VALUE gsl_vector_get_operator(VALUE self, VALUE ptr, VALUE element) {
   return rb_float_new(gsl_vector_get(v, (size_t)i));
 }
 
+static VALUE gsl_vector_set_operator(VALUE self, VALUE ptr, VALUE element, VALUE value) {
+  gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+  long i = FIX2LONG(element);
+  if (i < 0) { i = v->size + i; }
+  gsl_vector_set(v, (size_t)i, NUM2DBL(value));
+  return Qnil;
+}
+
 // Hide the view in a new vector (gsl_vector_subvector)
 extern "C" gsl_vector* gsl_vector_subvector_with_stride2(gsl_vector* v, size_t offset, size_t stride, size_t n) {
   gsl_vector_view view = gsl_vector_subvector_with_stride(v, offset, stride, n);
@@ -204,6 +212,21 @@ static VALUE gsl_matrix_from_array(VALUE self, VALUE ptr, VALUE array) {
 	return self;
 }
 
+static VALUE gsl_matrix_get_operator(VALUE self, VALUE ptr, VALUE element_i, VALUE element_j) {
+  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  size_t i = FIX2ULONG(element_i);
+  size_t j = FIX2ULONG(element_j);
+  return rb_float_new(gsl_matrix_get(m, i, j));
+}
+
+static VALUE gsl_matrix_set_operator(VALUE self, VALUE ptr, VALUE element_i, VALUE element_j, VALUE value) {
+  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  size_t i = FIX2ULONG(element_i);
+  size_t j = FIX2ULONG(element_j);
+  gsl_matrix_set(m, i, j, NUM2DBL(value));
+  return Qnil;
+}
+
 // Hide the view in a new matrix (gsl_matrix_submatrix)
 extern "C" gsl_matrix* gsl_matrix_submatrix2(gsl_matrix* m_ptr, size_t x, size_t y, size_t n, size_t m) {
   gsl_matrix_view view = gsl_matrix_submatrix(m_ptr, x, y, n, m);
@@ -251,6 +274,7 @@ extern "C" void Init_gslng_extensions(void) {
 
 	// vector
   rb_define_module_function(Backend_module, "gsl_vector_get_operator", (VALUE(*)(ANYARGS))gsl_vector_get_operator, 2);
+  rb_define_module_function(Backend_module, "gsl_vector_set_operator", (VALUE(*)(ANYARGS))gsl_vector_set_operator, 3);
 	rb_define_module_function(Backend_module, "gsl_vector_map!", (VALUE(*)(ANYARGS))gsl_vector_map, 1);
 	rb_define_module_function(Backend_module, "gsl_vector_map_index!", (VALUE(*)(ANYARGS))gsl_vector_map_index, 1);
 	rb_define_module_function(Backend_module, "gsl_vector_each_with_index", (VALUE(*)(ANYARGS))gsl_vector_each_with_index, 1);
@@ -267,4 +291,6 @@ extern "C" void Init_gslng_extensions(void) {
 	rb_define_module_function(Backend_module, "gsl_matrix_each", (VALUE(*)(ANYARGS))gsl_matrix_each, 1);
 	rb_define_module_function(Backend_module, "gsl_matrix_to_a", (VALUE(*)(ANYARGS))gsl_matrix_to_a, 1);
 	rb_define_module_function(Backend_module, "gsl_matrix_from_array", (VALUE(*)(ANYARGS))gsl_matrix_from_array, 2);
+  rb_define_module_function(Backend_module, "gsl_matrix_get_operator", (VALUE(*)(ANYARGS))gsl_matrix_get_operator, 3);
+  rb_define_module_function(Backend_module, "gsl_matrix_set_operator", (VALUE(*)(ANYARGS))gsl_matrix_set_operator, 4);
 }

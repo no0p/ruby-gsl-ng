@@ -7,4 +7,5 @@ require 'test/unit'
 
 require 'vector_test'
 require 'matrix_test'
-
+require 'rng_test'
+require 'test_special'
