@@ -58,6 +58,12 @@ module GSLng
       return v
     end
 
+    # Creates a Vector with linearly distributed values between +start+ and +stop+, separated by +delta+.
+    def Vector.linspace(start, stop, delta)
+      if (start > stop || delta <= 0) then raise 'Invalid values' end
+      Vector.new(((stop - start) / delta).floor.to_i + 1) {|i| start + delta * i}
+    end
+
     # Creates a Vector from an Array or a Range
     # @see Vector::from_array    
     # @example

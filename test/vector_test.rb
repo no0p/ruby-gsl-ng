@@ -16,6 +16,10 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal(10, Vector.zero(10).size)
 		assert(Vector.zero(10).zero?)
 		assert_nothing_raised { Vector.random(10) }
+    assert_equal(Vector[0], Vector.linspace(0, 1, 1.5))
+    assert_equal(Vector[0,1], Vector.linspace(0, 1, 1))
+    assert_equal(Vector[0,0.5,1], Vector.linspace(0, 1, 0.5))
+    assert_equal(Vector[0,0.7], Vector.linspace(0, 1, 0.7))
   end
 
 	def test_to_s
