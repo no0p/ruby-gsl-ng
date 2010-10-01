@@ -4,6 +4,7 @@
 $:.unshift File.join(File.dirname(__FILE__),'..','lib')
 $:.unshift File.join(File.dirname(__FILE__),'..','ext')
 
+require 'rubygems'
 require 'test/unit'
 require 'gslng'
 
@@ -48,6 +49,11 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal(v1.copy(v2), v2)
 		assert_equal(v1.dup, v2)
 	end
+
+  def test_stats
+    assert_equal(Vector[1, 2, 3, 4, 5].median, 3)
+    assert_equal(Vector[1, 2, 3, 4].median, 2.5)
+  end
 
 	def test_sets
 		assert_equal(Vector.zero(3).set!(1), Vector[1,1,1])
