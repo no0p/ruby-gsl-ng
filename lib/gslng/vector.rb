@@ -217,6 +217,12 @@ module GSLng
       end
       return delta
     end
+    
+    # Compute hash value for this Vector.
+    # Note: this may be a bit inefficient for now
+    def hash
+      self.to_a.hash
+    end
 
     # @group Setting/getting values
 
