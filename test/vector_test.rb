@@ -36,7 +36,10 @@ class VectorTest < Test::Unit::TestCase
 		assert_equal(Vector[1,2,3], Vector[1,2,3])
     assert_equal(Vector[0...3], [0,1,2])
 		assert_equal(Vector.zero(3), Vector.zero(3))
-		assert_not_equal(Vector.zero(4), Vector.zero(3))		
+		assert_not_equal(Vector.zero(4), Vector.zero(3))
+
+    assert(Vector[1,2,3].eql?(Vector[1,2,3]))
+    assert(!Vector[1,2,3].eql?(Vector[1,2,4]))
 	end
 
   def test_each

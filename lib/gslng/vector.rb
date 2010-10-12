@@ -540,5 +540,9 @@ module GSLng
       end
       return true
     end
+
+    def eql?(other)
+      @backend.gsl_vector_eql?(@ptr_value, other.ptr_value)
+    end
   end
 end

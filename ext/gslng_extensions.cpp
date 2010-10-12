@@ -83,6 +83,16 @@ static VALUE gsl_vector_set_operator(VALUE self, VALUE ptr, VALUE element, VALUE
   return Qnil;
 }
 
+static VALUE gsl_vector_eql(VALUE self, VALUE ptr, VALUE other_ptr) {
+  gsl_vector* v1 = (gsl_vector*)FIX2ULONG(ptr);
+  gsl_vector* v2 = (gsl_vector*)FIX2ULONG(other_ptr);
+  if (v1->size != v2->size) return Qfalse;
+  for (size_t i = 0; i < v1->size; i++) {
+    if (gsl_vector_get(v1, i) != gsl_vector_get(v2, i)) return Qfalse;
+  }
+  return Qtrue;
+}
+
 // Hide the view in a new vector (gsl_vector_subvector)
 extern "C" gsl_vector* gsl_vector_subvector_with_stride2(gsl_vector* v, size_t offset, size_t stride, size_t n) {
   gsl_vector_view view = gsl_vector_subvector_with_stride(v, offset, stride, n);
@@ -281,6 +291,7 @@ extern "C" void Init_gslng_extensions(void) {
 	rb_define_module_function(Backend_module, "gsl_vector_each", (VALUE(*)(ANYARGS))gsl_vector_each, 1);
 	rb_define_module_function(Backend_module, "gsl_vector_to_a", (VALUE(*)(ANYARGS))gsl_vector_to_a, 1);
 	rb_define_module_function(Backend_module, "gsl_vector_from_array", (VALUE(*)(ANYARGS))gsl_vector_from_array, 2);
+  rb_define_module_function(Backend_module, "gsl_vector_eql?", (VALUE(*)(ANYARGS))gsl_vector_eql, 2);
 
   // matrix
 	rb_define_module_function(Backend_module, "gsl_matrix_map!", (VALUE(*)(ANYARGS))gsl_matrix_map, 1);
