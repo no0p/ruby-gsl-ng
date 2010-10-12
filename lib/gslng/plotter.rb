@@ -27,8 +27,12 @@ module GSLng
     # Close the pipe. It is desireable to call this in an "ensure" section, to avoid
     # leaving the child gnuplot process there if the main ruby process dies
     def close
-      Process.kill 'TERM', @io.pid
-      @io.close; @io = nil      
+      pid = @io.pid
+      @io.flush; @io.close; @io = nil
+      begin
+      Process.kill 'TERM', pid
+      rescue Errno::ESRCH
+      end
     end
 
     # Send a command to the gnuplot process
