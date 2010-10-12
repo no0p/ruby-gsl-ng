@@ -153,6 +153,9 @@ module GSLng
     # Set the identity matrix values
     def identity; @backend.gsl_matrix_set_identity(@ptr); return self end
 
+    # Copy matrix values from +other+ to +self+
+    def set(other); @backend.gsl_matrix_memcpy(@ptr, other.ptr); return self end
+
     # @group Views
 
     # Create a {Matrix::View} from this Matrix.
