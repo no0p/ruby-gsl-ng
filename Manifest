@@ -5,7 +5,7 @@ Rakefile
 ext/extconf.rb
 ext/gslng_extensions.cpp
 ext/plotting.cpp
-lib/core-extensions/array.rb
+lib/core_extensions/array.rb
 lib/gslng.rb
 lib/gslng/backend.rb
 lib/gslng/backend_components/error_handling.rb
