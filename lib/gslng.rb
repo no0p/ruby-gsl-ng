@@ -7,3 +7,5 @@ require 'gslng/matrix'
 require 'gslng/matrix_view'
 require 'gslng/rng/rng'
 require 'gslng/special'
+
+require 'core_extensions/array'

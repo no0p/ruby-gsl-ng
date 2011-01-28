@@ -1,9 +1,11 @@
 History.txt
+Manifest
 README.rdoc
 Rakefile
 ext/extconf.rb
 ext/gslng_extensions.cpp
 ext/plotting.cpp
+lib/core-extensions/array.rb
 lib/gslng.rb
 lib/gslng/backend.rb
 lib/gslng/backend_components/error_handling.rb
@@ -29,4 +31,3 @@ test/rng_test.rb
 test/test_gsl.rb
 test/test_special.rb
 test/vector_test.rb
-Manifest
