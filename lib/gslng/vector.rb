@@ -426,7 +426,7 @@ module GSLng
 
     # Compute the correlation between self and other
     def correlation(other)
-      @backend.gsl_stats_correlation(self.as_array, self.stride, other.as_array, other.stride, self.size)
+      @backend.gsl_stats_correlation(self.as_array, self.stride, other.as_array, other.stride, self.size).round(15)
     end
 
     # @group High-order methods
