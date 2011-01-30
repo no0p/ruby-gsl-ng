@@ -6,6 +6,7 @@ doc
 .yardoc
 pkg
 *.gemspec
+*.gem
 lib/*.so
 *~
 *.swp
