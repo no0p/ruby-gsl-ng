@@ -199,7 +199,7 @@ module GSLng
     def column_vecview(i, offset = 0, size = nil)
       size = (@m - offset) if size.nil?
       ptr = @backend.gsl_matrix_column_view(@ptr, i, offset, size)
-      Vector::View.new(ptr, self, size)
+      Vector::View.new(ptr, self, size, self.columns)
     end
 
     
