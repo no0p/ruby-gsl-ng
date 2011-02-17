@@ -13,7 +13,7 @@ using namespace std;
 /************************* Vector functions *****************************/
 
 static VALUE gsl_vector_map(VALUE self, VALUE ptr) {
-	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	gsl_vector* v = (gsl_vector*)NUM2ULONG(ptr);
 	for (size_t i = 0; i < v->size; i++)
 		gsl_vector_set(v, i, NUM2DBL(rb_yield(rb_float_new(gsl_vector_get(v, i)))));
 	
@@ -21,7 +21,7 @@ static VALUE gsl_vector_map(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_vector_map_index(VALUE self, VALUE ptr) {
-	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	gsl_vector* v = (gsl_vector*)NUM2ULONG(ptr);
 	for (size_t i = 0; i < v->size; i++) {
 		VALUE vi = ULONG2NUM(i);
 		gsl_vector_set(v, i, NUM2DBL(rb_yield(vi)));
@@ -31,7 +31,7 @@ static VALUE gsl_vector_map_index(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_vector_each_with_index(VALUE self, VALUE ptr) {
-	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	gsl_vector* v = (gsl_vector*)NUM2ULONG(ptr);
 	for (size_t i = 0; i < v->size; i++) {
 		VALUE vi = ULONG2NUM(i);
 		rb_yield_values(2, rb_float_new(gsl_vector_get(v, i)), vi);
@@ -41,7 +41,7 @@ static VALUE gsl_vector_each_with_index(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_vector_each(VALUE self, VALUE ptr) {
-	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	gsl_vector* v = (gsl_vector*)NUM2ULONG(ptr);
 	for (size_t i = 0; i < v->size; i++)
 		rb_yield(rb_float_new(gsl_vector_get(v, i)));
 	
@@ -49,7 +49,7 @@ static VALUE gsl_vector_each(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_vector_to_a(VALUE self, VALUE ptr) {
-	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	gsl_vector* v = (gsl_vector*)NUM2ULONG(ptr);
 	
 	VALUE array = rb_ary_new2(v->size);
 	for (size_t i = 0; i < v->size; i++)
@@ -59,7 +59,7 @@ static VALUE gsl_vector_to_a(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_vector_from_array(VALUE self, VALUE ptr, VALUE array) {
-	gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+	gsl_vector* v = (gsl_vector*)NUM2ULONG(ptr);
 	if (v->size != RARRAY_LEN(array)) rb_raise(rb_eRuntimeError, "Sizes differ!");
 	
 	for (size_t i = 0; i < v->size; i++)
@@ -69,14 +69,14 @@ static VALUE gsl_vector_from_array(VALUE self, VALUE ptr, VALUE array) {
 }
 
 static VALUE gsl_vector_get_operator(VALUE self, VALUE ptr, VALUE element) {
-  gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+  gsl_vector* v = (gsl_vector*)NUM2ULONG(ptr);
   long i = FIX2LONG(element);
   if (i < 0) { i = v->size + i; }
   return rb_float_new(gsl_vector_get(v, (size_t)i));
 }
 
 static VALUE gsl_vector_set_operator(VALUE self, VALUE ptr, VALUE element, VALUE value) {
-  gsl_vector* v = (gsl_vector*)FIX2ULONG(ptr);
+  gsl_vector* v = (gsl_vector*)NUM2ULONG(ptr);
   long i = FIX2LONG(element);
   if (i < 0) { i = v->size + i; }
   gsl_vector_set(v, (size_t)i, NUM2DBL(value));
@@ -84,8 +84,8 @@ static VALUE gsl_vector_set_operator(VALUE self, VALUE ptr, VALUE element, VALUE
 }
 
 static VALUE gsl_vector_eql(VALUE self, VALUE ptr, VALUE other_ptr) {
-  gsl_vector* v1 = (gsl_vector*)FIX2ULONG(ptr);
-  gsl_vector* v2 = (gsl_vector*)FIX2ULONG(other_ptr);
+  gsl_vector* v1 = (gsl_vector*)NUM2ULONG(ptr);
+  gsl_vector* v2 = (gsl_vector*)NUM2ULONG(other_ptr);
   if (v1->size != v2->size) return Qfalse;
   for (size_t i = 0; i < v1->size; i++) {
     if (gsl_vector_get(v1, i) != gsl_vector_get(v2, i)) return Qfalse;
@@ -116,7 +116,7 @@ extern "C" double* gsl_vector_as_array(gsl_vector* v) {
 /************************* Matrix functions *****************************/
 
 static VALUE gsl_matrix_map(VALUE self, VALUE ptr) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
   size_t size1 = m->size1;
   size_t size2 = m->size2;
 
@@ -128,7 +128,7 @@ static VALUE gsl_matrix_map(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_matrix_map_array(VALUE self, VALUE ptr) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
 
 	VALUE array = rb_ary_new2(m->size1);
 	for (size_t i = 0; i < m->size1; i++) {
@@ -143,7 +143,7 @@ static VALUE gsl_matrix_map_array(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_matrix_map_index(VALUE self, VALUE ptr) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
   size_t size1 = m->size1;
   size_t size2 = m->size2;
 
@@ -155,7 +155,7 @@ static VALUE gsl_matrix_map_index(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_matrix_map_with_index(VALUE self, VALUE ptr) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
   size_t size1 = m->size1;
   size_t size2 = m->size2;
 
@@ -167,7 +167,7 @@ static VALUE gsl_matrix_map_with_index(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_matrix_each(VALUE self, VALUE ptr) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
   size_t size1 = m->size1;
   size_t size2 = m->size2;
 
@@ -179,7 +179,7 @@ static VALUE gsl_matrix_each(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_matrix_each_with_index(VALUE self, VALUE ptr) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
   size_t size1 = m->size1;
   size_t size2 = m->size2;
 
@@ -193,7 +193,7 @@ static VALUE gsl_matrix_each_with_index(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_matrix_to_a(VALUE self, VALUE ptr) {
-	gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+	gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
 
 	VALUE array = rb_ary_new2(m->size1);
 	for (size_t i = 0; i < m->size1; i++) {
@@ -208,7 +208,7 @@ static VALUE gsl_matrix_to_a(VALUE self, VALUE ptr) {
 }
 
 static VALUE gsl_matrix_from_array(VALUE self, VALUE ptr, VALUE array) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
   if (m->size1 != RARRAY_LEN(array)) rb_raise(rb_eRuntimeError, "Sizes differ!");
 
 	for (size_t i = 0; i < m->size1; i++) {
@@ -223,16 +223,16 @@ static VALUE gsl_matrix_from_array(VALUE self, VALUE ptr, VALUE array) {
 }
 
 static VALUE gsl_matrix_get_operator(VALUE self, VALUE ptr, VALUE element_i, VALUE element_j) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
-  size_t i = FIX2ULONG(element_i);
-  size_t j = FIX2ULONG(element_j);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
+  size_t i = NUM2ULONG(element_i);
+  size_t j = NUM2ULONG(element_j);
   return rb_float_new(gsl_matrix_get(m, i, j));
 }
 
 static VALUE gsl_matrix_set_operator(VALUE self, VALUE ptr, VALUE element_i, VALUE element_j, VALUE value) {
-  gsl_matrix* m = (gsl_matrix*)FIX2ULONG(ptr);
-  size_t i = FIX2ULONG(element_i);
-  size_t j = FIX2ULONG(element_j);
+  gsl_matrix* m = (gsl_matrix*)NUM2ULONG(ptr);
+  size_t i = NUM2ULONG(element_i);
+  size_t j = NUM2ULONG(element_j);
   gsl_matrix_set(m, i, j, NUM2DBL(value));
   return Qnil;
 }
