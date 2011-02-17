@@ -45,7 +45,7 @@ module GSLng
     end
 
     def Matrix.release(ptr) # @private
-      @backend.gsl_matrix_free(ptr)
+      GSLng.backend.gsl_matrix_free(ptr)
     end
 
     # Same as Matrix.new(m, n, true)
