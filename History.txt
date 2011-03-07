@@ -1,3 +1,16 @@
+=== 0.2.6
+* Features:
+  * Improved Vector#wrap
+  * Performance improvements
+  * Check for pkg-config, to avoid problems
+  * Vector#median (bdigital)
+  * Added Vector.linspace, Vector#hash, Matrix#set, Vector#eql?, Matrix#slide, Vector#quantile
+  * Extend Array to include #to_v and #to_m (bdigital)
+* Fixes:
+  * Better plotter process closing
+  * Clear C/CXXFLAGS
+  * Pointer conversion bug causing random segfaults
+  * Problem while trying to free GSL memory
 === 0.2.4.1
 * Fixes:
   * Gnuplot not being correctly executed
