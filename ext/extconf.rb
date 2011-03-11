@@ -12,4 +12,9 @@ if (RUBY_VERSION =~ /^1\.8/) then $libs << ' -lstdc++' end # Seems necessary in 
 
 ## Create Makefile
 with_cppflags("#{extra_flags}") { true }
+with_cflags('') { true }
+CONFIG['CXXFLAGS']=''
+
 create_makefile('gslng_extensions')
+
+

@@ -362,6 +362,11 @@ module GSLng
     # *Note* it assumes sorted data!
     def median; @backend.gsl_stats_median_from_sorted_data(self.as_array, self.stride, self.size) end
 
+    # Compute the median of the vector
+    # *Note* it assumes sorted data!
+    # @param [Float] f A number between 0 and 1 indicating the percentile
+    def quantile(f); @backend.gsl_stats_quantile_from_sorted_data(self.as_array, self.stride, self.size, f) end
+
     # Compute the variance of the vector
     # @param [Float] mean Optionally supply the mean if you already computed it previously with {self#mean}
     # @param [Boolean] fixed_mean If true, the passed mean is taken to be known a priori (see GSL documentation)
@@ -397,7 +402,7 @@ module GSLng
       else @backend.gsl_stats_absdev_m(self.as_array, self.stride, self.size, mean) end
     end
 
-    # Compute the skew of the vector. You can optionally provide the mean *and* the standard deviation if you already computed them
+    # Compute the skewness of the vector. You can optionally provide the mean *and* the standard deviation if you already computed them
     def skew(mean = nil, sd = nil)
       if (mean.nil? || sd.nil?) then @backend.gsl_stats_skew(self.as_array, self.stride, self.size)
       else @backend.gsl_stats_skew_sd_m(self.as_array, self.stride, self.size, mean, sd) end
